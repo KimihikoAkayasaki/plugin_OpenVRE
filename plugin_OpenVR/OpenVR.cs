@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System;
@@ -36,11 +36,11 @@ using Vanara.PInvoke;
 namespace plugin_OpenVR;
 
 [Export(typeof(IServiceEndpoint))]
-[ExportMetadata("Name", "SteamVR")]
-[ExportMetadata("Guid", "K2VRTEAM-AME2-APII-SNDP-SENDPTOPENVR")]
-[ExportMetadata("Publisher", "K2VR Team")]
-[ExportMetadata("Version", "1.0.0.2")]
-[ExportMetadata("Website", "https://github.com/KinectToVR/plugin_OpenVR")]
+[ExportMetadata("Name", "SteamVR (Emulation Support)")]
+[ExportMetadata("Guid", "K2VRTEAM-AME2-APII-SNDP-SENDPTOVREMU")]
+[ExportMetadata("Publisher", "公彦赤屋先")]
+[ExportMetadata("Version", "1.0.0.0")]
+[ExportMetadata("Website", "https://github.com/KimihikoAkayasaki/plugin_OpenVRE")]
 [ExportMetadata("DependencyInstaller", typeof(DriverInstaller))]
 [ExportMetadata("CoreSetupData", typeof(SetupData))]
 public class SteamVR : IServiceEndpoint
@@ -124,23 +124,107 @@ public class SteamVR : IServiceEndpoint
         _ => $"https://docs.k2vr.tech/{Host?.DocsLanguageCode ?? "en"}/app/steamvr-driver-codes/#6"
     });
 
-    public SortedSet<TrackerType> AdditionalSupportedTrackerTypes =>
-        new()
+    public Dictionary<TrackerType, SortedSet<KeyInputAction>> SupportedInputActions => new()
+    {
         {
-            TrackerType.TrackerHanded,
-            // TrackerType.TrackerLeftFoot, // Already OK
-            // TrackerType.TrackerRightFoot, // Already OK
-            TrackerType.TrackerLeftShoulder,
-            TrackerType.TrackerRightShoulder,
-            TrackerType.TrackerLeftElbow,
-            TrackerType.TrackerRightElbow,
-            TrackerType.TrackerLeftKnee,
-            TrackerType.TrackerRightKnee,
-            // TrackerType.TrackerWaist, // Already OK
-            TrackerType.TrackerChest,
-            TrackerType.TrackerCamera,
-            TrackerType.TrackerKeyboard
-        };
+            TrackerType.TrackerLeftHand, [
+                new KeyInputAction<bool>
+                {
+                    Name = "Left Menu", Description = "Left controller's menu button",
+                    Guid = Guid.Parse("1A3ABE96-B1B3-4ABF-9969-C87BB15B2C13"), Host = Host
+                },
+                new KeyInputAction<bool>
+                {
+                    Name = "Left Trigger", Description = "Left controller's trigger button",
+                    Guid = Guid.Parse("54B78337-23B6-4E36-A9C8-047061FB9256"), Host = Host
+                },
+                new KeyInputAction<bool>
+                {
+                    Name = "Left Grip", Description = "Left controller's grip button",
+                    Guid = Guid.Parse("36DE93FB-01DD-4DEC-ACE6-E9ADD96027B7"), Host = Host
+                },
+                new KeyInputAction<bool>
+                {
+                    Name = "Left X", Description = "Left controller's X button",
+                    Guid = Guid.Parse("DAE6AD34-B3E4-46D0-AFEE-1CACFB1387A1"), Host = Host
+                },
+                new KeyInputAction<bool>
+                {
+                    Name = "Left Y", Description = "Left controller's Y button",
+                    Guid = Guid.Parse("130B197B-EFC9-4A3A-9D3F-91A35BB83291"), Host = Host
+                },
+                new KeyInputAction<double>
+                {
+                    Name = "Left Joystick X", Description = "Left controller joystick's X axis",
+                    Guid = Guid.Parse("5F519116-9A5C-48BA-9693-D9A3741AF0AB"), Host = Host
+                },
+                new KeyInputAction<double>
+                {
+                    Name = "Left Joystick Y", Description = "Left controller joystick's Y axis",
+                    Guid = Guid.Parse("FF80F249-7F8D-4FA1-AC88-B9A1F5D623CB"), Host = Host
+                }
+            ]
+        },
+        {
+            TrackerType.TrackerRightHand, [
+                new KeyInputAction<bool>
+                {
+                    Name = "Right Menu", Description = "Right controller's menu button",
+                    Guid = Guid.Parse("6169CB90-4997-4266-AC33-83FF3FEF16AA"), Host = Host
+                },
+                new KeyInputAction<bool>
+                {
+                    Name = "Right Trigger", Description = "Right controller's trigger button",
+                    Guid = Guid.Parse("CC84BF86-6846-4A7D-9111-7919F22D0FA7"), Host = Host
+                },
+                new KeyInputAction<bool>
+                {
+                    Name = "Right Grip", Description = "Right controller's grip button",
+                    Guid = Guid.Parse("65EAFD83-C5D6-496F-BA3C-7FB0F9FED824"), Host = Host
+                },
+                new KeyInputAction<bool>
+                {
+                    Name = "Right A", Description = "Right controller's A button",
+                    Guid = Guid.Parse("98279522-D951-4EAC-9705-71EB5A9151D0"), Host = Host
+                },
+                new KeyInputAction<bool>
+                {
+                    Name = "Right B", Description = "Right controller's B button",
+                    Guid = Guid.Parse("1D7238C7-3391-44BA-B40F-5F33AEE64114"), Host = Host
+                },
+                new KeyInputAction<double>
+                {
+                    Name = "Right Joystick X", Description = "Right controller joystick's X axis",
+                    Guid = Guid.Parse("46CD8C05-16F6-42D5-9265-133E57E0933B"), Host = Host
+                },
+                new KeyInputAction<double>
+                {
+                    Name = "Right Joystick Y", Description = "Right controller joystick's Y axis",
+                    Guid = Guid.Parse("14E62950-A538-422E-B688-82CCB5B1E179"), Host = Host
+                }
+            ]
+        }
+    };
+
+    public SortedSet<TrackerType> AdditionalSupportedTrackerTypes =>
+    [
+        TrackerType.TrackerHanded,
+        // TrackerType.TrackerLeftFoot, // Already OK
+        // TrackerType.TrackerRightFoot, // Already OK
+        TrackerType.TrackerLeftShoulder,
+        TrackerType.TrackerRightShoulder,
+        TrackerType.TrackerLeftElbow,
+        TrackerType.TrackerRightElbow,
+        TrackerType.TrackerLeftKnee,
+        TrackerType.TrackerRightKnee,
+        // TrackerType.TrackerWaist, // Already OK
+        TrackerType.TrackerChest,
+        TrackerType.TrackerCamera,
+        TrackerType.TrackerKeyboard,
+        TrackerType.TrackerHead,
+        TrackerType.TrackerLeftHand,
+        TrackerType.TrackerRightHand
+    ];
 
     public bool IsRestartOnChangesNeeded => true;
 
@@ -565,6 +649,17 @@ public class SteamVR : IServiceEndpoint
         }
     }
 
+    public async Task ProcessKeyInput<T>(KeyInputAction<T> action, T data, TrackerType? receiver, CancellationToken? token = null)
+    {
+        Host?.Log($"Processed key input \"{action.Name}\" of type {action.DataType} with data {data} for {receiver}.");
+
+        var hasLocalAction = receiver is null
+            ? SupportedInputActions.Values.Any(x => x.Contains(action))
+            : SupportedInputActions[receiver.Value].Contains(action);
+
+        Host?.Log($"Furthermore, {action} {(hasLocalAction ? "is" : "is not")} present in local SupportedInputActions set.");
+    }
+
     public async Task<(int Status, string StatusMessage, long PingTime)> TestConnection()
     {
         try
@@ -924,8 +1019,8 @@ public class SteamVR : IServiceEndpoint
             steamVrSettings.Add("driver_Amethyst",
                 new JsonObject
                 {
-                    new("enable", JsonValue.CreateBooleanValue(true)),
-                    new("blocked_by_safe_mode", JsonValue.CreateBooleanValue(false))
+                    new KeyValuePair<string, IJsonValue>("enable", JsonValue.CreateBooleanValue(true)),
+                    new KeyValuePair<string, IJsonValue>("blocked_by_safe_mode", JsonValue.CreateBooleanValue(false))
                 });
 
             await File.WriteAllTextAsync(resultPaths.Path.VrSettingsPath, steamVrSettings.ToString());
