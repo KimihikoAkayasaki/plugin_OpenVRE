@@ -53,6 +53,7 @@ powershell -Command tlbimp '$(IntDirFullPath)Generated Files\MIDL\$(ProjectName)
     </PreBuildEvent>
     <Link>
       <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)vendor\openvr\lib\win64;$(SolutionDir)vendor\minhook\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <TreatLinkerWarningAsErrors Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\"
@@ -77,6 +78,7 @@ powershell -Command tlbimp '$(IntDirFullPath)Generated Files\MIDL\$(ProjectName)
     </PreBuildEvent>
     <Link>
       <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vendor\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <TreatLinkerWarningAsErrors Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\"
