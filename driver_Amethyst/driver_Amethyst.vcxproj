@@ -12,7 +12,7 @@
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <RootNamespace>driver_Amethyst</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DesktopCompatible>true</DesktopCompatible>
@@ -26,11 +26,11 @@
   <Import Project="..\Common\CppProject.props" />
   <ItemDefinitionGroup Label="Globals">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);Generated Files\$(Platform);$(SolutionDir)vendor;$(SolutionDir)vendor\openvr\headers;$(ProjectDir)Generated Files</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_AMD64_;driver_Amethyst_EXPORTS;WINRT_NO_MODULE_LOCK;RPCPROXY_ENABLE_CPP_NO_CINTERFACE;PROXY_CLSID_IS={ 0xb3901d84, 0xb3ba, 0x4347, { 0x8c, 0x5f, 0xee, 0xcf, 0xe5, 0x74, 0x55, 0xd } };ENTRY_PREFIX=PSFactory_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);Generated Files\$(Platform);$(SolutionDir)vendor;$(SolutionDir)vendor\openvr\headers;$(ProjectDir)Generated Files;$(SolutionDir)vendor\minhook\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_AMD64_;driver_Amethyst_EXPORTS;_CRT_SECURE_NO_WARNINGS;WINRT_NO_MODULE_LOCK;RPCPROXY_ENABLE_CPP_NO_CINTERFACE;PROXY_CLSID_IS={ 0xb3901d84, 0xb3ba, 0x4347, { 0x8c, 0x5f, 0xee, 0xcf, 0xe5, 0x74, 0x55, 0xd } };ENTRY_PREFIX=PSFactory_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ole32.lib;OleAut32.lib;rpcrt4.lib;runtimeobject.lib;user32.lib;openvr_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;rpcrt4.lib;runtimeobject.lib;openvr_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>driver_Amethyst.def</ModuleDefinitionFile>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -52,12 +52,15 @@ powershell -Command midl '$(ProjectDir)$(ProjectName).idl' /tlb '$(IntDirFullPat
 powershell -Command tlbimp '$(IntDirFullPath)Generated Files\MIDL\$(ProjectName).tlb' /out:'$(OutDir)com.$(ProjectName).dll'</Command>
     </PreBuildEvent>
     <Link>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)vendor\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)vendor\openvr\lib\win64;$(SolutionDir)vendor\minhook\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\Amethyst\"
-xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\Amethyst\bin\win64\"
-xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\"
+xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\"
+xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\"
+
+copy /y "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_00Amethyst.dll"
+del "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -76,9 +79,12 @@ powershell -Command tlbimp '$(IntDirFullPath)Generated Files\MIDL\$(ProjectName)
       <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)vendor\openvr\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\Amethyst\"
-xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\Amethyst\bin\win64\"
-xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\"
+xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\"
+xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\"
+
+copy /y "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_00Amethyst.dll"
+del "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='ARM64'">
@@ -95,6 +101,8 @@ xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\ne
     <ClCompile Include="Generated Files\$(Platform)\IDriverService_p.c" />
     <ClCompile Include="Generated Files\$(Platform)\IVersionedApi_i.c" />
     <ClCompile Include="Generated Files\$(Platform)\IVersionedApi_p.c" />
+    <ClCompile Include="Hooking.cpp" />
+    <ClCompile Include="InterfaceHookInjector.cpp" />
     <ClCompile Include="module.cpp" />
     <ClCompile Include="ServerProvider.cpp" />
     <ClCompile Include="DriverService.cpp" />
@@ -111,13 +119,21 @@ xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\ne
     <ClInclude Include="Generated Files\$(Platform)\IVersionedApi.h" />
     <ClInclude Include="Generated Files\x64\DataContract.h" />
     <ClInclude Include="DriverService.h" />
+    <ClInclude Include="Hooking.h" />
+    <ClInclude Include="InterfaceHookInjector.h" />
     <ClInclude Include="Logging.h" />
+    <ClInclude Include="ServerProvider.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="driver_Amethyst.idl" />
     <Midl Include="IDriverService.idl" />
     <Midl Include="IVersionedApi.idl" />
     <Midl Include="DataContract.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\vendor\minhook\build\VC16\libMinHook.vcxproj">
+      <Project>{f142a341-5ee0-442d-a15f-98ae9b48dbae}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

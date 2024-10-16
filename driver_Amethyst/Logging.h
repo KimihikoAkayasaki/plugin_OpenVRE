@@ -6,17 +6,44 @@
 //
 
 #pragma once
-#include <openvr_driver.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string>
 
-inline void logMessage(const std::string& message)
+#include <openvr_driver.h>
+#include <windows.h>
+
+inline void logMessage(const std::string& message, ...)
 {
+    va_list args;
+    char buffer[2048];
+
+    auto fmt = message.c_str();
+
+    va_start(args, fmt);
+    vsprintf(buffer, fmt, args);
+    va_end(args);
+    
     if (vr::VRDriverContext() && vr::VRDriverLog())
     {
-        vr::VRDriverLog()->Log(message.c_str());
+        vr::VRDriverLog()->Log(buffer);
     }
     else
     {
-        OutputDebugStringA(message.c_str());
+        OutputDebugStringA(buffer);
     }
+}
+
+inline void logMessageVerbose(const std::string& message, ...)
+{
+    va_list args;
+    char buffer[2048];
+
+    auto fmt = message.c_str();
+
+    va_start(args, fmt);
+    vsprintf(buffer, fmt, args);
+    va_end(args);
+
+    OutputDebugStringA(buffer);
 }

@@ -19,6 +19,15 @@
     <Filter Include="Interface Files">
       <UniqueIdentifier>{3e0194e9-fc26-4e90-af0a-fe56db45d0f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hooking Files">
+      <UniqueIdentifier>{89933c5b-7c0c-449b-8296-1e168fcb872f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hooking Files\Header Files">
+      <UniqueIdentifier>{51cd8672-4fa1-47d0-9060-0cf213415bfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hooking Files\Source Files">
+      <UniqueIdentifier>{f029b289-7c1e-401a-8f18-5c919f4e471e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module.cpp">
@@ -51,6 +60,12 @@
     <ClCompile Include="ServerProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="InterfaceHookInjector.cpp">
+      <Filter>Hooking Files\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooking.cpp">
+      <Filter>Hooking Files\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DriverService.h">
@@ -72,6 +87,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Logging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceHookInjector.h">
+      <Filter>Hooking Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Hooking.h">
+      <Filter>Hooking Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

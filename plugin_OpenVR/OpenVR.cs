@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -17,7 +16,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Data.Json;
+using Windows.Storage;
 using Amethyst.Plugins.Contract;
+using com.driver_Amethyst;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -25,8 +26,6 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Newtonsoft.Json;
 using plugin_OpenVR.Utils;
 using Valve.VR;
-using Windows.Storage;
-using com.driver_Amethyst;
 using Vanara.PInvoke;
 
 #pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
@@ -842,12 +841,12 @@ public class SteamVR : IServiceEndpoint
         {
             // Copy all driver files to Amethyst's local data folder
             new DirectoryInfo(Path.Join(Directory.GetParent(
-                    Assembly.GetExecutingAssembly().Location)!.FullName, "Driver", "Amethyst"))
+                    Assembly.GetExecutingAssembly().Location)!.FullName, "Driver", "00Amethyst"))
                 .CopyToFolder((await ApplicationData.Current.LocalFolder.CreateFolderAsync(
-                    "Amethyst", CreationCollisionOption.OpenIfExists)).Path);
+                    "00Amethyst", CreationCollisionOption.OpenIfExists)).Path);
 
             // Assume it's done now and get the path
-            localAmethystDriverPath = Path.Join(PackageUtils.GetAmethystAppDataPath(), "Amethyst");
+            localAmethystDriverPath = Path.Join(PackageUtils.GetAmethystAppDataPath(), "00Amethyst");
 
             // If there's none (still), cry about it and abort
             if (string.IsNullOrEmpty(localAmethystDriverPath) || !Directory.Exists(localAmethystDriverPath))
@@ -921,8 +920,8 @@ public class SteamVR : IServiceEndpoint
 
         var isLocalAmethystDriverRegistered = false; // is our local ame registered?
 
-        foreach (var externalDriver in openVrPaths.external_drivers.Where(externalDriver =>
-                     externalDriver.Contains("Amethyst")))
+        foreach (var externalDriver in openVrPaths.external_drivers
+                     .Where(externalDriver => externalDriver.Contains("Amethyst")))
         {
             // Don't un-register the already-existent one
             if (externalDriver == localAmethystDriverPath)
@@ -1214,23 +1213,23 @@ public class SteamVR : IServiceEndpoint
         if (PackageUtils.IsAmethystPackaged)
         {
             // Copy all driver files to Amethyst's local data folder
-            Directory.CreateDirectory(Path.Join(ApplicationData.Current.LocalFolder.Path, "Amethyst"));
+            Directory.CreateDirectory(Path.Join(ApplicationData.Current.LocalFolder.Path, "00Amethyst"));
 
             // Copy the manifest
             new FileInfo(Path.Join(
                     Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.FullName, "Amethyst.vrmanifest"))
-                .CopyTo(Path.Join(ApplicationData.Current.LocalFolder.Path, "Amethyst", "Amethyst.vrmanifest"), true);
+                .CopyTo(Path.Join(ApplicationData.Current.LocalFolder.Path, "00Amethyst", "Amethyst.vrmanifest"), true);
 
             // Copy the icon
             var icon = new FileInfo(Path.Join(
                 Directory.GetParent(Environment.ProcessPath!)!.FullName, "Assets", "ktvr.png"));
 
             if (icon.Exists)
-                icon.CopyTo(Path.Join(ApplicationData.Current.LocalFolder.Path, "Amethyst", "ktvr.png"), true);
+                icon.CopyTo(Path.Join(ApplicationData.Current.LocalFolder.Path, "00Amethyst", "ktvr.png"), true);
 
             // Assume it's done now and get the path
             var copiedManifestPath =
-                Path.Join(ApplicationData.Current.LocalFolder.Path, "Amethyst", "Amethyst.vrmanifest");
+                Path.Join(ApplicationData.Current.LocalFolder.Path, "00Amethyst", "Amethyst.vrmanifest");
 
             // If there's none (still), cry about it and abort
             if (string.IsNullOrEmpty(copiedManifestPath) || !File.Exists(copiedManifestPath))
@@ -1255,7 +1254,7 @@ public class SteamVR : IServiceEndpoint
 
         // Compose the manifest path depending on where our plugin is
         var manifestPath = PackageUtils.IsAmethystPackaged
-            ? Path.Join(ApplicationData.Current.LocalFolder.Path, "Amethyst", "Amethyst.vrmanifest")
+            ? Path.Join(ApplicationData.Current.LocalFolder.Path, "00Amethyst", "Amethyst.vrmanifest")
             : Path.Join(Directory.GetParent(
                 Assembly.GetAssembly(GetType())!.Location)?.FullName, "Amethyst.vrmanifest");
 
