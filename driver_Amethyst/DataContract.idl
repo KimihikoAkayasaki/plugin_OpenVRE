@@ -15,6 +15,9 @@ enum dTrackerType
  TrackerChest,
  TrackerCamera,
  TrackerKeyboard,
+ TrackerHead,
+ TrackerLeftHand,
+ TrackerRightHand
 };
 
 struct dVector3

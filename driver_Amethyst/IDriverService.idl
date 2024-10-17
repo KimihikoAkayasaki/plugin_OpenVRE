@@ -12,4 +12,7 @@ interface IDriverService : IUnknown
 
  HRESULT SetDriverPose([in] unsigned int id, [in] struct dDriverPose pose);
  HRESULT EnableOverride([in] unsigned int id, [in] boolean isEnabled);
+
+ HRESULT UpdateInputBoolean([in] enum dTrackerType tracker, [in, string] wchar_t* path, [in] boolean value);
+ HRESULT UpdateInputScalar([in] enum dTrackerType tracker, [in, string] wchar_t* path, [in] float value);
 };

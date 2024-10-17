@@ -1,4 +1,6 @@
 #include "DriverService.h"
+
+#include <ranges>
 #include <RpcProxy.h>
 #include <shellapi.h>
 #include <wil/cppwinrt_helpers.h>
@@ -34,10 +36,15 @@ HRESULT DriverService::GetVersion(DWORD* apiVersion) noexcept
 
 HRESULT DriverService::SetTrackerState(dTrackerBase tracker)
 {
-    if (tracker_vector_.size() > static_cast<int>(tracker.Role))
+    // HMD state override
+    if (tracker.Role == TrackerHead)
+        return ERROR_INVALID_INDEX; // Failure
+
+    // Normal case
+    if (tracker_vector_.contains(static_cast<ITrackerType>(tracker.Role)))
     {
         // Create a handle to the updated (native) tracker
-        const auto p_tracker = &tracker_vector_.at(tracker.Role);
+        const auto p_tracker = &tracker_vector_[static_cast<ITrackerType>(tracker.Role)];
 
         // Check the state and attempts spawning the tracker
         if (!p_tracker->is_added() && !p_tracker->spawn())
@@ -53,7 +60,7 @@ HRESULT DriverService::SetTrackerState(dTrackerBase tracker)
                                static_cast<int>(tracker.Role), tracker.ConnectionState == 1));
 
         // Call the VR update handler and compose the result
-        tracker_vector_.at(tracker.Role).update();
+        tracker_vector_[static_cast<ITrackerType>(tracker.Role)].update();
         return S_OK;
     }
 
@@ -65,10 +72,22 @@ HRESULT DriverService::SetTrackerState(dTrackerBase tracker)
 
 HRESULT DriverService::UpdateTracker(dTrackerBase tracker)
 {
-    if (tracker_vector_.size() > static_cast<int>(tracker.Role))
+    // HMD pose override
+    if (tracker.Role == TrackerHead)
+    {
+        return SetDriverPose(0, dDriverPose{
+                                 .ConnectionState = true,
+                                 .TrackingState = true,
+                                 .Position = tracker.Position,
+                                 .Orientation = tracker.Orientation
+                             });
+    }
+
+    // Normal case
+    if (tracker_vector_.contains(static_cast<ITrackerType>(tracker.Role)))
     {
         // Update the pose of the passed tracker
-        if (!tracker_vector_.at(tracker.Role).set_pose(tracker))
+        if (!tracker_vector_[static_cast<ITrackerType>(tracker.Role)].set_pose(tracker))
         {
             logMessage(std::format("Couldn't spawn tracker with ID {} due to an unknown native exception.",
                                    static_cast<int>(tracker.Role)));
@@ -144,6 +163,40 @@ void DriverService::RegisterOverrideSetHandler(
     logMessage("Registered an override set handler for DriverService");
 }
 
+HRESULT DriverService::UpdateInputBoolean(dTrackerType tracker, wchar_t* path, boolean value)
+{
+    if (path == nullptr || WStringToString(path).empty())
+    {
+        logMessage("Couldn't update an input component. The path string is empty.");
+        return ERROR_EMPTY; // Compose the reply
+    }
+
+    if (tracker_vector_.contains(static_cast<ITrackerType>(tracker)))
+        return tracker_vector_[static_cast<ITrackerType>(tracker)]
+               .update_input(WStringToString(path), static_cast<bool>(value))
+                   ? S_OK
+                   : ERROR_INVALID_ACCESS;
+
+    return ERROR_INVALID_INDEX; // Not available
+}
+
+HRESULT DriverService::UpdateInputScalar(dTrackerType tracker, wchar_t* path, float value)
+{
+    if (path == nullptr || WStringToString(path).empty())
+    {
+        logMessage("Couldn't update an input component. The path string is empty.");
+        return ERROR_EMPTY; // Compose the reply
+    }
+
+    if (tracker_vector_.contains(static_cast<ITrackerType>(tracker)))
+        return tracker_vector_[static_cast<ITrackerType>(tracker)]
+               .update_input(WStringToString(path), value)
+                   ? S_OK
+                   : ERROR_INVALID_ACCESS;
+
+    return ERROR_INVALID_INDEX; // Not available
+}
+
 DriverService::~DriverService()
 {
     //winrt::check_hresult(RevokeActiveObject(register_cookie_, nullptr));
@@ -204,16 +257,16 @@ std::optional<winrt::hresult_error> DriverService::SetupService(const _GUID clsi
 
 void DriverService::UpdateTrackers()
 {
-    for (auto& tracker : tracker_vector_)
+    for (auto& tracker : tracker_vector_ | std::views::values)
         tracker.update(); // Update all
 }
 
 void DriverService::AddTracker(const std::string& serial, const ITrackerType role)
 {
-    tracker_vector_.emplace_back(serial, role);
+    tracker_vector_[role] = BodyTracker(serial, role);
 }
 
-std::vector<BodyTracker> DriverService::TrackerVector()
+std::map<ITrackerType, BodyTracker> DriverService::TrackerVector()
 {
     return tracker_vector_;
 }

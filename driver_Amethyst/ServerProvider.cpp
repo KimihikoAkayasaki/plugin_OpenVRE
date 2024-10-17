@@ -7,6 +7,7 @@
 #include "BodyTracker.h"
 #include "InterfaceHookInjector.h"
 #include "Logging.h"
+#include <ranges>
 
 // Wide String to UTF8 String
 inline std::string WStringToString(const std::wstring& w_str)
@@ -33,12 +34,13 @@ vr::EVRInitError ServerProvider::Init(vr::IVRDriverContext* pDriverContext)
 
     logMessage("Registering driver service handlers: pose handler...");
     driver_service_.get()->RegisterDriverPoseHandler(
-        [&, this](unsigned int id, dDriverPose pose) -> winrt::hresult_error {
+        [&, this](unsigned int id, dDriverPose pose) -> winrt::hresult_error
+        {
             try
             {
                 UpdateDriverPose(id, pose);
-            } 
-            catch (const std::exception& e) 
+            }
+            catch (const std::exception& e)
             {
                 logMessage(std::format("Could not update pose override for ID {}. Exception: {}", id, e.what()));
                 return winrt::hresult_error(E_FAIL);
@@ -48,12 +50,13 @@ vr::EVRInitError ServerProvider::Init(vr::IVRDriverContext* pDriverContext)
 
     logMessage("Registering driver service handlers: override handler...");
     driver_service_.get()->RegisterOverrideSetHandler(
-        [&, this](unsigned int id, bool isEnabled) -> winrt::hresult_error {
+        [&, this](unsigned int id, bool isEnabled) -> winrt::hresult_error
+        {
             try
             {
                 SetPoseOverride(id, isEnabled);
-            } 
-            catch (const std::exception& e) 
+            }
+            catch (const std::exception& e)
             {
                 logMessage(std::format("Could not toggle pose override for ID {}. Exception: {}", id, e.what()));
                 return winrt::hresult_error(E_FAIL);
@@ -70,7 +73,7 @@ vr::EVRInitError ServerProvider::Init(vr::IVRDriverContext* pDriverContext)
             ITrackerType_Role_Serial.at(static_cast<ITrackerType>(role)), static_cast<ITrackerType>(role));
 
     // Log the prepended trackers
-    for (auto& tracker : driver_service_.get()->TrackerVector())
+    for (auto& tracker : driver_service_.get()->TrackerVector() | std::views::values)
         logMessage(std::format("Registered a tracker: ({})", tracker.get_serial()));
 
     logMessage("Setting up the server runner...");

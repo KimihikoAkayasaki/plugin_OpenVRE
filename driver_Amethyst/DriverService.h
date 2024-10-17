@@ -40,8 +40,12 @@ public:
     HRESULT STDMETHODCALLTYPE RequestVrRestart(wchar_t* message) override;
     HRESULT STDMETHODCALLTYPE PingDriverService(__int64* ms) override;
 
+    // Note: sending a "Head" tracker is the same as SetDriverPose(0, ...)
     HRESULT STDMETHODCALLTYPE SetDriverPose(unsigned int id, dDriverPose pose) override;
     HRESULT STDMETHODCALLTYPE EnableOverride(unsigned int id, boolean isEnabled) override;
+
+    HRESULT STDMETHODCALLTYPE UpdateInputBoolean(dTrackerType tracker, wchar_t* path, boolean value) override;
+    HRESULT STDMETHODCALLTYPE UpdateInputScalar(dTrackerType tracker, wchar_t* path, float value) override;
 
     ~DriverService() override;
 
@@ -52,14 +56,14 @@ public:
 
     void UpdateTrackers();
     void AddTracker(const std::string& serial, const ITrackerType role);
-    std::vector<BodyTracker> TrackerVector();
+    std::map<ITrackerType, BodyTracker> TrackerVector();
 
     void RegisterDriverPoseHandler(const std::function<winrt::hresult_error(const uint32_t& id, dDriverPose pose)>& handler);
     void RegisterOverrideSetHandler(const std::function<winrt::hresult_error(const uint32_t& id, bool isEnabled)>& handler);
 
 private:
     DWORD register_cookie_;
-    std::vector<BodyTracker> tracker_vector_;
+    std::map<ITrackerType, BodyTracker> tracker_vector_;
 
     std::function<winrt::hresult_error(const uint32_t& id, dDriverPose pose)> pose_update_handler_;
     std::function<winrt::hresult_error(const uint32_t& id, bool isEnabled)> override_set_handler_;

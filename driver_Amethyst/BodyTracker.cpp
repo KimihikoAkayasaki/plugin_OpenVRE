@@ -1,13 +1,13 @@
 #include <openvr_driver.h>
 #include "BodyTracker.h"
 
-BodyTracker::BodyTracker(const std::string& serial, const ITrackerType role)
+BodyTracker::BodyTracker(const std::string& serial, const ITrackerType role) : _type(role)
 {
     _serial = serial;
     _role = static_cast<int>(role);
     _active = false;
 
-    _pose = { 0 };
+    _pose = {0};
     _pose.poseIsValid = true; // Otherwise tracker may disappear
     _pose.result = vr::TrackingResult_Running_OK;
     _pose.deviceIsConnected = false;
@@ -54,6 +54,48 @@ BodyTracker::BodyTracker(const std::string& serial, const ITrackerType role)
     _pose.vecAngularAcceleration[0] = 0;
     _pose.vecAngularAcceleration[1] = 0;
     _pose.vecAngularAcceleration[2] = 0;
+
+    // Input components
+    if (role == Tracker_LeftHand)
+    {
+        boolean_components_ = {
+            {"/input/system/click", 0},
+            {"/input/x/click", 0},
+            {"/input/x/touch", 0},
+            {"/input/y/click", 0},
+            {"/input/y/touch", 0},
+            {"/input/trigger/touch", 0},
+            {"/input/joystick/click", 0},
+            {"/input/joystick/touch", 0},
+        };
+
+        scalar_components_ = {
+            {"/input/grip/value", 0},
+            {"/input/trigger/value", 0},
+            {"/input/joystick/x", 1},
+            {"/input/joystick/y", 1}
+        };
+    }
+    else if (role == Tracker_RightHand)
+    {
+        boolean_components_ = {
+            {"/input/system/click", 0},
+            {"/input/a/click", 0},
+            {"/input/a/touch", 0},
+            {"/input/b/click", 0},
+            {"/input/b/touch", 0},
+            {"/input/trigger/touch", 0},
+            {"/input/joystick/click", 0},
+            {"/input/joystick/touch", 0},
+        };
+
+        scalar_components_ = {
+            {"/input/grip/value", 0},
+            {"/input/trigger/value", 0},
+            {"/input/joystick/x", 1},
+            {"/input/joystick/y", 1}
+        };
+    }
 }
 
 std::string BodyTracker::get_serial() const
@@ -73,7 +115,7 @@ void BodyTracker::update()
     }
 }
 
-bool BodyTracker::set_pose(dTrackerBase const& tracker)
+bool BodyTracker::set_pose(const dTrackerBase& tracker)
 {
     try
     {
@@ -167,6 +209,18 @@ void BodyTracker::set_state(const bool state)
     _active = state;
 }
 
+bool BodyTracker::update_input(const std::string& path, const bool& value)
+{
+    if (!boolean_components_.contains(path) || boolean_components_[path] <= 0) return false;
+    return vr::VRDriverInput()->UpdateBooleanComponent(boolean_components_[path], value, 0) == vr::VRInputError_None;
+}
+
+bool BodyTracker::update_input(const std::string& path, const float& value)
+{
+    if (!scalar_components_.contains(path) || scalar_components_[path] <= 0) return false;
+    return vr::VRDriverInput()->UpdateScalarComponent(scalar_components_[path], value, 0) == vr::VRInputError_None;
+}
+
 bool BodyTracker::spawn()
 {
     try
@@ -179,7 +233,7 @@ bool BodyTracker::spawn()
             return true;
         }
     }
-    catch (...)  // NOLINT(bugprone-empty-catch)
+    catch (...) // NOLINT(bugprone-empty-catch)
     {
     }
     return false;
@@ -210,37 +264,43 @@ vr::EVRInitError BodyTracker::Activate(vr::TrackedDeviceIndex_t index)
     // Set our universe ID
     vr::VRProperties()->SetUint64Property(_props, vr::Prop_CurrentUniverseId_Uint64, 2);
 
-    // Create components
-    vr::VRDriverInput()->CreateBooleanComponent(_props, "/input/system/click", &_components._system_click);
-    vr::VRDriverInput()->CreateHapticComponent(_props, "/output/haptic", &_components._haptic);
+    // Create a haptic component
+    uint64_t handle_temp = 0;
+    vr::VRDriverInput()->CreateHapticComponent(_props, "/output/haptic", &handle_temp);
+
+    // Create other components
+    for (auto& [component, handle] : boolean_components_)
+        vr::VRDriverInput()->CreateBooleanComponent(_props, component.c_str(), &handle);
+    for (auto& [component, handle] : scalar_components_)
+        vr::VRDriverInput()->CreateScalarComponent(_props, component.c_str(), &handle,
+                                                   vr::EVRScalarType::VRScalarType_Absolute,
+                                                   static_cast<vr::EVRScalarUnits>(handle));
 
     // Register all properties
     vr::VRProperties()->SetStringProperty(_props, vr::Prop_TrackingSystemName_String, "amethyst");
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_ModelNumber_String, "Amethyst BodyTracker");
     vr::VRProperties()->SetStringProperty(_props, vr::Prop_SerialNumber_String, _serial.c_str());
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_RenderModelName_String, "{htc}vr_tracker_vive_1_0");
 
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_WillDriftInYaw_Bool, false);
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_ManufacturerName_String, "HTC");
+    vr::VRProperties()->SetStringProperty(_props, vr::Prop_ManufacturerName_String, is_hand() ? "Oculus" : "HTC");
     vr::VRProperties()->SetStringProperty(_props, vr::Prop_TrackingFirmwareVersion_String,
-        "1541800000 RUNNER-WATCHMAN$runner-watchman@runner-watchman 2018-01-01 FPGA 512(2.56/0/0) BL 0 VRC 1541800000 Radio 1518800000");
+                                          "1541800000 RUNNER-WATCHMAN$runner-watchman@runner-watchman 2018-01-01 FPGA 512(2.56/0/0) BL 0 VRC 1541800000 Radio 1518800000");
     vr::VRProperties()->SetStringProperty(_props, vr::Prop_HardwareRevision_String,
-        "product 128 rev 2.5.6 lot 2000/0/0 0");
+                                          "product 128 rev 2.5.6 lot 2000/0/0 0");
 
     vr::VRProperties()->SetStringProperty(_props, vr::Prop_ConnectedWirelessDongle_String, "D0000BE000");
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_DeviceIsWireless_Bool, true);
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_DeviceIsCharging_Bool, false);
     vr::VRProperties()->SetFloatProperty(_props, vr::Prop_DeviceBatteryPercentage_Float, 1.f);
 
-    vr::HmdMatrix34_t l_transform = { -1.f, 0.f, 0.f, 0.f, 0.f, 0.f, -1.f, 0.f, 0.f, -1.f, 0.f, 0.f };
+    vr::HmdMatrix34_t l_transform = {-1.f, 0.f, 0.f, 0.f, 0.f, 0.f, -1.f, 0.f, 0.f, -1.f, 0.f, 0.f};
     vr::VRProperties()->SetProperty(_props, vr::Prop_StatusDisplayTransform_Matrix34, &l_transform,
-        sizeof(vr::HmdMatrix34_t),
-        vr::k_unHmdMatrix34PropertyTag);
+                                    sizeof(vr::HmdMatrix34_t),
+                                    vr::k_unHmdMatrix34PropertyTag);
 
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_Firmware_UpdateAvailable_Bool, false);
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_Firmware_ManualUpdate_Bool, false);
     vr::VRProperties()->SetStringProperty(_props, vr::Prop_Firmware_ManualUpdateURL_String,
-        "https://developer.valvesoftware.com/wiki/SteamVR/HowTo_Update_Firmware");
+                                          "https://developer.valvesoftware.com/wiki/SteamVR/HowTo_Update_Firmware");
     vr::VRProperties()->SetUint64Property(_props, vr::Prop_HardwareRevision_Uint64, 2214720000);
     vr::VRProperties()->SetUint64Property(_props, vr::Prop_FirmwareVersion_Uint64, 1541800000);
     vr::VRProperties()->SetUint64Property(_props, vr::Prop_FPGAVersion_Uint64, 512);
@@ -255,53 +315,112 @@ vr::EVRInitError BodyTracker::Activate(vr::TrackedDeviceIndex_t index)
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_Firmware_ForceUpdateRequired_Bool, false);
 
     // vr::VRProperties()->SetUint64Property(_props, vr::Prop_ParentDriver_Uint64, 8589934597);
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_ResourceRoot_String, "htc");
-
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_RegisteredDeviceType_String,
-        ("amethyst/vr_tracker/" + _serial).c_str());
-
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_Identifiable_Bool, false);
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_Firmware_RemindUpdate_Bool, false);
-    vr::VRProperties()->SetInt32Property(_props, vr::Prop_ControllerRoleHint_Int32, vr::TrackedControllerRole_Invalid);
     vr::VRProperties()->SetInt32Property(_props, vr::Prop_ControllerHandSelectionPriority_Int32, -1);
 
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceOff_String,
-        "{htc}/icons/tracker_status_off.png");
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearching_String,
-        "{htc}/icons/tracker_status_searching.gif");
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearchingAlert_String,
-        "{htc}/icons/tracker_status_searching_alert.gif");
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReady_String,
-        "{htc}/icons/tracker_status_ready.png");
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReadyAlert_String,
-        "{htc}/icons/tracker_status_ready_alert.png");
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceNotReady_String,
-        "{htc}/icons/tracker_status_error.png");
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceStandby_String,
-        "{htc}/icons/tracker_status_standby.png");
-    vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceAlertLow_String,
-        "{htc}/icons/tracker_status_ready_low.png");
+    switch (_type) // NOLINT(clang-diagnostic-switch-enum)
+    {
+    case Tracker_LeftHand:
+        vr::VRProperties()->SetInt32Property(_props, vr::Prop_ControllerRoleHint_Int32,
+                                             vr::TrackedControllerRole_LeftHand);
+        break;
+    case Tracker_RightHand:
+        vr::VRProperties()->SetInt32Property(_props, vr::Prop_ControllerRoleHint_Int32,
+                                             vr::TrackedControllerRole_RightHand);
+        break;
+    default:
+        vr::VRProperties()->SetInt32Property(_props, vr::Prop_ControllerRoleHint_Int32,
+                                             vr::TrackedControllerRole_Invalid);
+        break;
+    }
+
+    if (is_hand())
+    {
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RegisteredDeviceType_String,
+                                              ("amethyst/vr_controller/" + _serial).c_str());
+
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_ResourceRoot_String, "oculus");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_ModelNumber_String, "Amethyst VRController");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RenderModelName_String, "{htc}vr_tracker_vive_1_0");
+
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_ControllerType_String,
+                                              "oculus_touch");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_InputProfilePath_String,
+                                              "{oculus}/input/touch_profile.json");
+
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReady_String,
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceOff_String,
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_off",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearching_String,
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_searching",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearchingAlert_String,
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_searching_alert",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReadyAlert_String,
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready_alert",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceNotReady_String,
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_not_ready",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceStandby_String,
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_standby",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceAlertLow_String,
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready_low",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+    }
+    else
+    {
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RegisteredDeviceType_String,
+                                              ("amethyst/vr_tracker/" + _serial).c_str());
+
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_ResourceRoot_String, "htc");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_ModelNumber_String, "Amethyst BodyTracker");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RenderModelName_String, "{htc}vr_tracker_vive_1_0");
+
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceOff_String,
+                                              "{htc}/icons/tracker_status_off.png");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearching_String,
+                                              "{htc}/icons/tracker_status_searching.gif");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearchingAlert_String,
+                                              "{htc}/icons/tracker_status_searching_alert.gif");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReady_String,
+                                              "{htc}/icons/tracker_status_ready.png");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReadyAlert_String,
+                                              "{htc}/icons/tracker_status_ready_alert.png");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceNotReady_String,
+                                              "{htc}/icons/tracker_status_error.png");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceStandby_String,
+                                              "{htc}/icons/tracker_status_standby.png");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceAlertLow_String,
+                                              "{htc}/icons/tracker_status_ready_low.png");
+
+        /* Get tracker role */
+        const std::string role_enum_string = ITrackerType_String.at(static_cast<ITrackerType>(_role));
+
+        /* Update controller type and input path */
+        const std::string input_path =
+            "{htc}/input/tracker/" + role_enum_string + "_profile.json";
+
+        vr::VRProperties()->SetStringProperty(_props,
+                                              vr::Prop_InputProfilePath_String, input_path.c_str());
+        vr::VRProperties()->SetStringProperty(_props,
+                                              vr::Prop_ControllerType_String, role_enum_string.c_str());
+
+        /* Update tracker's role in menu */
+        vr::VRSettings()->SetString(vr::k_pch_Trackers_Section, ("/devices/amethyst/vr_tracker/" + _serial).c_str(),
+                                    ITrackerType_Role_String.at(static_cast<ITrackerType>(_role)));
+    }
 
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_HasDisplayComponent_Bool, false);
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_HasCameraComponent_Bool, false);
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_HasDriverDirectModeComponent_Bool, false);
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_HasVirtualDisplayComponent_Bool, false);
-
-    /* Get tracker role */
-    const std::string role_enum_string = ITrackerType_String.at(static_cast<ITrackerType>(_role));
-
-    /* Update controller type and input path */
-    const std::string input_path =
-        "{htc}/input/tracker/" + role_enum_string + "_profile.json";
-
-    vr::VRProperties()->SetStringProperty(_props,
-        vr::Prop_InputProfilePath_String, input_path.c_str());
-    vr::VRProperties()->SetStringProperty(_props,
-        vr::Prop_ControllerType_String, role_enum_string.c_str());
-
-    /* Update tracker's role in menu */
-    vr::VRSettings()->SetString(vr::k_pch_Trackers_Section, ("/devices/amethyst/vr_tracker/" + _serial).c_str(),
-        ITrackerType_Role_String.at(static_cast<ITrackerType>(_role)));
 
     /* Mark tracker as activated */
     _activated = true;

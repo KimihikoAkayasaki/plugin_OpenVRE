@@ -23,63 +23,72 @@ enum ITrackerType : int
     Tracker_Waist = 9,
     Tracker_Chest = 10,
     Tracker_Camera = 11,
-    Tracker_Keyboard = 12
+    Tracker_Keyboard = 12,
+    //Tracker_Head = 13,
+    Tracker_LeftHand = 14,
+    Tracker_RightHand = 15
 };
 
 // Mapping enum to string for eliminating if-else loop
 const std::map<ITrackerType, const char*>
-ITrackerType_String{
-    {Tracker_Handed, "vive_tracker_handed"},
-    {Tracker_LeftFoot, "vive_tracker_left_foot"},
-    {Tracker_RightFoot, "vive_tracker_right_foot"},
-    {Tracker_LeftShoulder, "vive_tracker_left_Shoulder"},
-    {Tracker_RightShoulder, "vive_tracker_right_shoulder"},
-    {Tracker_LeftElbow, "vive_tracker_left_elbow"},
-    {Tracker_RightElbow, "vive_tracker_right_elbow"},
-    {Tracker_LeftKnee, "vive_tracker_left_knee"},
-    {Tracker_RightKnee, "vive_tracker_right_knee"},
-    {Tracker_Waist, "vive_tracker_waist"},
-    {Tracker_Chest, "vive_tracker_chest"},
-    {Tracker_Camera, "vive_tracker_camera"},
-    {Tracker_Keyboard, "vive_tracker_keyboard"}
-},
+    ITrackerType_String{
+        {Tracker_Handed, "vive_tracker_handed"},
+        {Tracker_LeftFoot, "vive_tracker_left_foot"},
+        {Tracker_RightFoot, "vive_tracker_right_foot"},
+        {Tracker_LeftShoulder, "vive_tracker_left_Shoulder"},
+        {Tracker_RightShoulder, "vive_tracker_right_shoulder"},
+        {Tracker_LeftElbow, "vive_tracker_left_elbow"},
+        {Tracker_RightElbow, "vive_tracker_right_elbow"},
+        {Tracker_LeftKnee, "vive_tracker_left_knee"},
+        {Tracker_RightKnee, "vive_tracker_right_knee"},
+        {Tracker_Waist, "vive_tracker_waist"},
+        {Tracker_Chest, "vive_tracker_chest"},
+        {Tracker_Camera, "vive_tracker_camera"},
+        {Tracker_Keyboard, "vive_tracker_keyboard"},
+        {Tracker_LeftHand, "vive_tracker_left_hand"},
+        {Tracker_RightHand, "vive_tracker_right_hand"}
+    },
 
-ITrackerType_Role_String{
-    {Tracker_Handed, "TrackerRole_Handed"},
-    {Tracker_LeftFoot, "TrackerRole_LeftFoot"},
-    {Tracker_RightFoot, "TrackerRole_RightFoot"},
-    {Tracker_LeftShoulder, "TrackerRole_LeftShoulder"},
-    {Tracker_RightShoulder, "TrackerRole_RightShoulder"},
-    {Tracker_LeftElbow, "TrackerRole_LeftElbow"},
-    {Tracker_RightElbow, "TrackerRole_RightElbow"},
-    {Tracker_LeftKnee, "TrackerRole_LeftKnee"},
-    {Tracker_RightKnee, "TrackerRole_RightKnee"},
-    {Tracker_Waist, "TrackerRole_Waist"},
-    {Tracker_Chest, "TrackerRole_Chest"},
-    {Tracker_Camera, "TrackerRole_Camera"},
-    {Tracker_Keyboard, "TrackerRole_Keyboard"}
-},
+    ITrackerType_Role_String{
+        {Tracker_Handed, "TrackerRole_Handed"},
+        {Tracker_LeftFoot, "TrackerRole_LeftFoot"},
+        {Tracker_RightFoot, "TrackerRole_RightFoot"},
+        {Tracker_LeftShoulder, "TrackerRole_LeftShoulder"},
+        {Tracker_RightShoulder, "TrackerRole_RightShoulder"},
+        {Tracker_LeftElbow, "TrackerRole_LeftElbow"},
+        {Tracker_RightElbow, "TrackerRole_RightElbow"},
+        {Tracker_LeftKnee, "TrackerRole_LeftKnee"},
+        {Tracker_RightKnee, "TrackerRole_RightKnee"},
+        {Tracker_Waist, "TrackerRole_Waist"},
+        {Tracker_Chest, "TrackerRole_Chest"},
+        {Tracker_Camera, "TrackerRole_Camera"},
+        {Tracker_Keyboard, "TrackerRole_Keyboard"},
+        {Tracker_LeftHand, "TrackerRole_LeftHand"},
+        {Tracker_RightHand, "TrackerRole_RightHand"}
+    },
 
-ITrackerType_Role_Serial{
-    {Tracker_Handed, "AME-HANDED"},
-    {Tracker_LeftFoot, "AME-LFOOT"},
-    {Tracker_RightFoot, "AME-RFOOT"},
-    {Tracker_LeftShoulder, "AME-LSHOULDER"},
-    {Tracker_RightShoulder, "AME-RSHOULDER"},
-    {Tracker_LeftElbow, "AME-LELBOW"},
-    {Tracker_RightElbow, "AME-RELBOW"},
-    {Tracker_LeftKnee, "AME-LKNEE"},
-    {Tracker_RightKnee, "AME-RKNEE"},
-    {Tracker_Waist, "AME-WAIST"},
-    {Tracker_Chest, "AME-CHEST"},
-    {Tracker_Camera, "AME-CAMERA"},
-    {Tracker_Keyboard, "AME-KEYBOARD"}
-};
+    ITrackerType_Role_Serial{
+        {Tracker_Handed, "AME-HANDED"},
+        {Tracker_LeftFoot, "AME-LFOOT"},
+        {Tracker_RightFoot, "AME-RFOOT"},
+        {Tracker_LeftShoulder, "AME-LSHOULDER"},
+        {Tracker_RightShoulder, "AME-RSHOULDER"},
+        {Tracker_LeftElbow, "AME-LELBOW"},
+        {Tracker_RightElbow, "AME-RELBOW"},
+        {Tracker_LeftKnee, "AME-LKNEE"},
+        {Tracker_RightKnee, "AME-RKNEE"},
+        {Tracker_Waist, "AME-WAIST"},
+        {Tracker_Chest, "AME-CHEST"},
+        {Tracker_Camera, "AME-CAMERA"},
+        {Tracker_Keyboard, "AME-KEYBOARD"},
+        {Tracker_LeftHand, "AME-LHAND"},
+        {Tracker_RightHand, "AME-RHAND"}
+    };
 
 class BodyTracker : public vr::ITrackedDeviceServerDriver
 {
 public:
-    explicit BodyTracker(const std::string& serial, ITrackerType role);
+    explicit BodyTracker(const std::string& serial = "AME-INVALID", ITrackerType role = Tracker_Handed);
     virtual ~BodyTracker() = default;
 
     /**
@@ -160,15 +169,20 @@ public:
     vr::DriverPose_t GetPose() override;
 
     // Update pose
-    bool set_pose(dTrackerBase const& tracker);
+    bool set_pose(const dTrackerBase& tracker);
 
     void set_state(bool state);
     bool spawn(); // TrackedDeviceAdded
+
+    bool update_input(const std::string& path, const bool& value);
+    bool update_input(const std::string& path, const float& value);
 
     // Get to know if tracker is activated (added)
     [[nodiscard]] bool is_added() const { return _added; }
     // Get to know if tracker is active (connected)
     [[nodiscard]] bool is_active() const { return _active; }
+    // Get to know if tracker is a hand tracker (controller)
+    [[nodiscard]] bool is_hand() const { return _type == Tracker_LeftHand || _type == Tracker_RightHand; }
 
 private:
     // Is tracker added/active
@@ -184,15 +198,11 @@ private:
     // An identifier for OpenVR for when we want to make property changes to this device.
     vr::PropertyContainerHandle_t _props;
 
-    // A struct for concise storage of all of the component handles for this device.
-    struct TrackerComponents
-    {
-        vr::VRInputComponentHandle_t
-            _system_click,
-            _haptic;
-    };
-
-    TrackerComponents _components;
     std::string _serial;
     int _role;
+
+    ITrackerType _type;
+
+    std::map<std::string, vr::VRInputComponentHandle_t> boolean_components_;
+    std::map<std::string, vr::VRInputComponentHandle_t> scalar_components_;
 };
