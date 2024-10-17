@@ -9,4 +9,7 @@ interface IDriverService : IUnknown
 
  HRESULT RequestVrRestart([in, string] wchar_t* message);
  HRESULT PingDriverService([out] __int64* ms);
+
+ HRESULT SetDriverPose([in] unsigned int id, [in] struct dDriverPose pose);
+ HRESULT EnableOverride([in] unsigned int id, [in] boolean isEnabled);
 };

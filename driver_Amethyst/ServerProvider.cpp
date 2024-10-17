@@ -31,6 +31,36 @@ vr::EVRInitError ServerProvider::Init(vr::IVRDriverContext* pDriverContext)
     logMessage("Injecting server driver hooks...");
     InjectHooks(this, pDriverContext);
 
+    logMessage("Registering driver service handlers: pose handler...");
+    driver_service_.get()->RegisterDriverPoseHandler(
+        [&, this](unsigned int id, dDriverPose pose) -> winrt::hresult_error {
+            try
+            {
+                UpdateDriverPose(id, pose);
+            } 
+            catch (const std::exception& e) 
+            {
+                logMessage(std::format("Could not update pose override for ID {}. Exception: {}", id, e.what()));
+                return winrt::hresult_error(E_FAIL);
+            }
+            return winrt::hresult_error(S_OK);
+        });
+
+    logMessage("Registering driver service handlers: override handler...");
+    driver_service_.get()->RegisterOverrideSetHandler(
+        [&, this](unsigned int id, bool isEnabled) -> winrt::hresult_error {
+            try
+            {
+                SetPoseOverride(id, isEnabled);
+            } 
+            catch (const std::exception& e) 
+            {
+                logMessage(std::format("Could not toggle pose override for ID {}. Exception: {}", id, e.what()));
+                return winrt::hresult_error(E_FAIL);
+            }
+            return winrt::hresult_error(S_OK);
+        });
+
     // Append default trackers
     logMessage("Adding default trackers...");
 
@@ -95,15 +125,34 @@ void ServerProvider::LeaveStandby()
 bool ServerProvider::HandleDevicePoseUpdated(uint32_t openVRID, vr::DriverPose_t& pose)
 {
     // Apply pose overrides for selected IDs
-    if (openVRID > 0)
+    if (openVRID > 0 && pose_overrides_.contains(openVRID))
     {
-        //pose.qRotation = convert(dbgRot);
-        //pose.vecPosition[0] = dbgPos(0);
-        //pose.vecPosition[1] = dbgPos(1);
-        //pose.vecPosition[2] = dbgPos(2);
+        pose.qRotation.w = pose_overrides_[openVRID].Orientation.W;
+        pose.qRotation.x = pose_overrides_[openVRID].Orientation.X;
+        pose.qRotation.y = pose_overrides_[openVRID].Orientation.Y;
+        pose.qRotation.z = pose_overrides_[openVRID].Orientation.Z;
+
+        pose.vecPosition[0] = pose_overrides_[openVRID].Position.X;
+        pose.vecPosition[1] = pose_overrides_[openVRID].Position.Y;
+        pose.vecPosition[2] = pose_overrides_[openVRID].Position.Z;
+
+        pose.poseIsValid = pose_overrides_[openVRID].TrackingState;
+        pose.deviceIsConnected = pose_overrides_[openVRID].ConnectionState;
     }
 
     return true;
+}
+
+void ServerProvider::SetPoseOverride(uint32_t id, bool isEnabled)
+{
+    if (isEnabled) pose_overrides_[id] = dDriverPose();
+    else pose_overrides_.erase(id);
+}
+
+void ServerProvider::UpdateDriverPose(uint32_t id, dDriverPose pose)
+{
+    if (pose_overrides_.contains(id))
+        pose_overrides_[id] = pose;
 }
 
 class DriverWatchdog : public vr::IVRWatchdogProvider

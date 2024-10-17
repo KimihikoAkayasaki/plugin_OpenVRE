@@ -118,6 +118,32 @@ HRESULT DriverService::PingDriverService(long long* ms)
     return S_OK; // Compose the reply
 }
 
+HRESULT DriverService::SetDriverPose(unsigned int id, dDriverPose pose)
+{
+    if (pose_update_handler_) return pose_update_handler_(id, pose).code();
+    return E_NOTIMPL; // Not available
+}
+
+HRESULT DriverService::EnableOverride(unsigned int id, boolean isEnabled)
+{
+    if (override_set_handler_) return override_set_handler_(id, isEnabled).code();
+    return E_NOTIMPL; // Not available
+}
+
+void DriverService::RegisterDriverPoseHandler(
+    const std::function<winrt::hresult_error(const uint32_t& id, dDriverPose pose)>& handler)
+{
+    pose_update_handler_ = handler;
+    logMessage("Registered a pose update handler for DriverService");
+}
+
+void DriverService::RegisterOverrideSetHandler(
+    const std::function<winrt::hresult_error(const uint32_t& id, bool isEnabled)>& handler)
+{
+    override_set_handler_ = handler;
+    logMessage("Registered an override set handler for DriverService");
+}
+
 DriverService::~DriverService()
 {
     //winrt::check_hresult(RevokeActiveObject(register_cookie_, nullptr));

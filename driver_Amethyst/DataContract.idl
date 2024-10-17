@@ -53,3 +53,12 @@ struct dTrackerBase
  struct dVector3Nullable AngularVelocity;
  struct dVector3Nullable AngularAcceleration;
 };
+
+struct dDriverPose 
+{
+ boolean ConnectionState;
+ boolean TrackingState;
+ 
+ struct dVector3 Position;
+ struct dQuaternion Orientation;
+};

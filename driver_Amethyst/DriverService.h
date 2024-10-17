@@ -13,6 +13,7 @@
 #include "BodyTracker.h"
 #include "driver_Amethyst.h"
 #include "wilx.hpp"
+#include <functional>
 
 extern "C" {
 _Check_return_ HRESULT STDAPICALLTYPE DLLGETCLASSOBJECT_ENTRY(
@@ -39,6 +40,9 @@ public:
     HRESULT STDMETHODCALLTYPE RequestVrRestart(wchar_t* message) override;
     HRESULT STDMETHODCALLTYPE PingDriverService(__int64* ms) override;
 
+    HRESULT STDMETHODCALLTYPE SetDriverPose(unsigned int id, dDriverPose pose) override;
+    HRESULT STDMETHODCALLTYPE EnableOverride(unsigned int id, boolean isEnabled) override;
+
     ~DriverService() override;
 
     static void InstallProxyStub();
@@ -50,9 +54,15 @@ public:
     void AddTracker(const std::string& serial, const ITrackerType role);
     std::vector<BodyTracker> TrackerVector();
 
+    void RegisterDriverPoseHandler(const std::function<winrt::hresult_error(const uint32_t& id, dDriverPose pose)>& handler);
+    void RegisterOverrideSetHandler(const std::function<winrt::hresult_error(const uint32_t& id, bool isEnabled)>& handler);
+
 private:
     DWORD register_cookie_;
     std::vector<BodyTracker> tracker_vector_;
+
+    std::function<winrt::hresult_error(const uint32_t& id, dDriverPose pose)> pose_update_handler_;
+    std::function<winrt::hresult_error(const uint32_t& id, bool isEnabled)> override_set_handler_;
 
     static DWORD proxy_stub_registration_cookie_;
 };
