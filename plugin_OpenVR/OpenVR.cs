@@ -1039,7 +1039,7 @@ public class SteamVR : IServiceEndpoint
 
     #region Amethyst VRDriver Methods
 
-    private int InitAmethystServerAsync(string target = "BA32B754-20E3-4C8C-913B-28BBAC30531B")
+    private int InitAmethystServerAsync(string target = "BA32B754-20E3-4C8C-913B-28BBAC30531C")
     {
         try
         {
@@ -1482,7 +1482,7 @@ public static class OvrExtensions
         return new dTrackerBase
         {
             ConnectionState = Convert.ToSByte(tracker.ConnectionState),
-            TrackingState = Convert.ToSByte(tracker.TrackingState == TrackedJointState.StateTracked),
+            TrackingState = Convert.ToSByte(tracker.TrackingState != TrackedJointState.StateNotTracked),
             Serial = tracker.Serial,
             Role = (dTrackerType)tracker.Role,
             Position = tracker.Position.ComVector(),

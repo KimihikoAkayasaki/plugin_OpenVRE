@@ -56,12 +56,12 @@ powershell -Command tlbimp '$(IntDirFullPath)Generated Files\MIDL\$(ProjectName)
       <TreatLinkerWarningAsErrors Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\"
-xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\"
-xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\"
+xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\"
+xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\"
 
-copy /y "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_00Amethyst.dll"
-del "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll"</Command>
+copy /y "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll" "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_00Amethyst.dll"
+del "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -81,12 +81,12 @@ powershell -Command tlbimp '$(IntDirFullPath)Generated Files\MIDL\$(ProjectName)
       <TreatLinkerWarningAsErrors Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\"
-xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\"
-xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy /y /d "$(SolutionDir)external\driver_resources\*" "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\"
+xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\"
+xcopy /y /d /e "$(OutDir)*" "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\"
 
-copy /y "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll" "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_00Amethyst.dll"
-del "$(SolutionDir)plugin_OpenVR\bin\$(Configuration)\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll"</Command>
+copy /y "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll" "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_00Amethyst.dll"
+del "$(SolutionDir)plugin_OpenVR\bin\Release\net7.0\win10-$(Platform)\publish\Driver\00Amethyst\bin\win64\driver_Amethyst.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='ARM64'">

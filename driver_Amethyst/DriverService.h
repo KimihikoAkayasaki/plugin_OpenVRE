@@ -58,15 +58,15 @@ public:
     void AddTracker(const std::string& serial, const ITrackerType role);
     std::map<ITrackerType, BodyTracker> TrackerVector();
 
-    void RegisterDriverPoseHandler(const std::function<winrt::hresult_error(const uint32_t& id, dDriverPose pose)>& handler);
-    void RegisterOverrideSetHandler(const std::function<winrt::hresult_error(const uint32_t& id, bool isEnabled)>& handler);
+    void RegisterDriverPoseHandler(const std::function<HRESULT(const uint32_t& id, dDriverPose pose)>& handler);
+    void RegisterOverrideSetHandler(const std::function<HRESULT(const uint32_t& id, bool isEnabled)>& handler);
 
 private:
     DWORD register_cookie_;
     std::map<ITrackerType, BodyTracker> tracker_vector_;
 
-    std::function<winrt::hresult_error(const uint32_t& id, dDriverPose pose)> pose_update_handler_;
-    std::function<winrt::hresult_error(const uint32_t& id, bool isEnabled)> override_set_handler_;
+    std::function<HRESULT(const uint32_t& id, dDriverPose pose)> pose_update_handler_;
+    std::function<HRESULT(const uint32_t& id, bool isEnabled)> override_set_handler_;
 
     static DWORD proxy_stub_registration_cookie_;
 };

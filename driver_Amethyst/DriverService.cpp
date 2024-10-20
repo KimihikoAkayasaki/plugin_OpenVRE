@@ -36,9 +36,9 @@ HRESULT DriverService::GetVersion(DWORD* apiVersion) noexcept
 
 HRESULT DriverService::SetTrackerState(dTrackerBase tracker)
 {
-    // HMD state override
+    // HMD pose override
     if (tracker.Role == TrackerHead)
-        return ERROR_INVALID_INDEX; // Failure
+        return EnableOverride(0, tracker.ConnectionState);
 
     // Normal case
     if (tracker_vector_.contains(static_cast<ITrackerType>(tracker.Role)))
@@ -139,25 +139,25 @@ HRESULT DriverService::PingDriverService(long long* ms)
 
 HRESULT DriverService::SetDriverPose(unsigned int id, dDriverPose pose)
 {
-    if (pose_update_handler_) return pose_update_handler_(id, pose).code();
+    if (pose_update_handler_) return pose_update_handler_(id, pose);
     return E_NOTIMPL; // Not available
 }
 
 HRESULT DriverService::EnableOverride(unsigned int id, boolean isEnabled)
 {
-    if (override_set_handler_) return override_set_handler_(id, isEnabled).code();
+    if (override_set_handler_) return override_set_handler_(id, isEnabled);
     return E_NOTIMPL; // Not available
 }
 
 void DriverService::RegisterDriverPoseHandler(
-    const std::function<winrt::hresult_error(const uint32_t& id, dDriverPose pose)>& handler)
+    const std::function<HRESULT(const uint32_t& id, dDriverPose pose)>& handler)
 {
     pose_update_handler_ = handler;
     logMessage("Registered a pose update handler for DriverService");
 }
 
 void DriverService::RegisterOverrideSetHandler(
-    const std::function<winrt::hresult_error(const uint32_t& id, bool isEnabled)>& handler)
+    const std::function<HRESULT(const uint32_t& id, bool isEnabled)>& handler)
 {
     override_set_handler_ = handler;
     logMessage("Registered an override set handler for DriverService");

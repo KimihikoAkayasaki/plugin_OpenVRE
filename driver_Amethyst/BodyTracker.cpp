@@ -311,7 +311,6 @@ vr::EVRInitError BodyTracker::Activate(vr::TrackedDeviceIndex_t index)
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_DeviceProvidesBatteryStatus_Bool, true);
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_DeviceCanPowerOff_Bool, true);
     vr::VRProperties()->SetStringProperty(_props, vr::Prop_Firmware_ProgrammingTarget_String, _serial.c_str());
-    vr::VRProperties()->SetInt32Property(_props, vr::Prop_DeviceClass_Int32, vr::TrackedDeviceClass_GenericTracker);
     vr::VRProperties()->SetBoolProperty(_props, vr::Prop_Firmware_ForceUpdateRequired_Bool, false);
 
     // vr::VRProperties()->SetUint64Property(_props, vr::Prop_ParentDriver_Uint64, 8589934597);
@@ -337,45 +336,48 @@ vr::EVRInitError BodyTracker::Activate(vr::TrackedDeviceIndex_t index)
 
     if (is_hand())
     {
-        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RegisteredDeviceType_String,
-                                              ("amethyst/vr_controller/" + _serial).c_str());
+        vr::VRProperties()->SetInt32Property(_props, vr::Prop_DeviceClass_Int32, vr::TrackedDeviceClass_Controller);
+        //vr::VRProperties()->SetStringProperty(_props, vr::Prop_ResourceRoot_String, "oculus");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_ModelNumber_String, "Miramar (Left Controller)");
 
-        vr::VRProperties()->SetStringProperty(_props, vr::Prop_ResourceRoot_String, "oculus");
-        vr::VRProperties()->SetStringProperty(_props, vr::Prop_ModelNumber_String, "Amethyst VRController");
-        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RenderModelName_String, "{htc}vr_tracker_vive_1_0");
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RenderModelName_String, 
+            std::format("oculus_quest2_controller_{}", _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RegisteredDeviceType_String, 
+            std::format("culus/1WMHH000X00000_Controller_{}", _type == Tracker_LeftHand ? "Left" : "Right").c_str());
 
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_ControllerType_String,
-                                              "oculus_touch");
+            "oculus_touch");
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_InputProfilePath_String,
-                                              "{oculus}/input/touch_profile.json");
+            "{oculus}/input/touch_profile.json");
 
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReady_String,
-                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready",
-                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+            std::format("{{oculus}}/icons/rifts_{}_controller_ready.png",
+                _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceOff_String,
-                                              std::format("{{oculus}}/icons/rifts_{}_controller_off",
-                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+            std::format("{{oculus}}/icons/rifts_{}_controller_off.png",
+                _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearching_String,
-                                              std::format("{{oculus}}/icons/rifts_{}_controller_searching",
-                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+            std::format("{{oculus}}/icons/rifts_{}_controller_searching.gif",
+                _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearchingAlert_String,
-                                              std::format("{{oculus}}/icons/rifts_{}_controller_searching_alert",
-                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+            std::format("{{oculus}}/icons/rifts_{}_controller_searching_alert.gif",
+                _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReadyAlert_String,
-                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready_alert",
-                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+            std::format("{{oculus}}/icons/rifts_{}_controller_ready_alert.png",
+                _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceNotReady_String,
-                                              std::format("{{oculus}}/icons/rifts_{}_controller_not_ready",
-                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+            std::format("{{oculus}}/icons/rifts_{}_controller_not_ready.png",
+                _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceStandby_String,
-                                              std::format("{{oculus}}/icons/rifts_{}_controller_standby",
-                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+            std::format("{{oculus}}/icons/rifts_{}_controller_standby.png",
+                _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceAlertLow_String,
-                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready_low",
-                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+            std::format("{{oculus}}/icons/rifts_{}_controller_ready_low.png",
+                _type == Tracker_LeftHand ? "left" : "right").c_str());
     }
     else
     {
+        vr::VRProperties()->SetInt32Property(_props, vr::Prop_DeviceClass_Int32, vr::TrackedDeviceClass_GenericTracker);
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_RegisteredDeviceType_String,
                                               ("amethyst/vr_tracker/" + _serial).c_str());
 

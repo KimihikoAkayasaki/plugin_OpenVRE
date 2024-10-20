@@ -34,43 +34,56 @@ vr::EVRInitError ServerProvider::Init(vr::IVRDriverContext* pDriverContext)
 
     logMessage("Registering driver service handlers: pose handler...");
     driver_service_.get()->RegisterDriverPoseHandler(
-        [&, this](unsigned int id, dDriverPose pose) -> winrt::hresult_error
+        [&, this](unsigned int id, dDriverPose pose) -> HRESULT
         {
             try
             {
                 UpdateDriverPose(id, pose);
             }
+            catch (const winrt::hresult_error& e)
+            {
+                logMessage(std::format("Could not update pose override for ID {}. Exception: {}", id, WStringToString(e.message().c_str())));
+                return e.code().value;
+            }
             catch (const std::exception& e)
             {
                 logMessage(std::format("Could not update pose override for ID {}. Exception: {}", id, e.what()));
-                return winrt::hresult_error(E_FAIL);
+                return E_FAIL;
             }
-            return winrt::hresult_error(S_OK);
+            return S_OK;
         });
 
     logMessage("Registering driver service handlers: override handler...");
     driver_service_.get()->RegisterOverrideSetHandler(
-        [&, this](unsigned int id, bool isEnabled) -> winrt::hresult_error
+        [&, this](unsigned int id, bool isEnabled) -> HRESULT
         {
             try
             {
                 SetPoseOverride(id, isEnabled);
             }
+            catch (const winrt::hresult_error& e)
+            {
+                logMessage(std::format("Could not update pose override for ID {}. Exception: {}", id, WStringToString(e.message().c_str())));
+                return e.code().value;
+            }
             catch (const std::exception& e)
             {
                 logMessage(std::format("Could not toggle pose override for ID {}. Exception: {}", id, e.what()));
-                return winrt::hresult_error(E_FAIL);
+                return E_FAIL;
             }
-            return winrt::hresult_error(S_OK);
+            return S_OK;
         });
 
     // Append default trackers
     logMessage("Adding default trackers...");
 
     // Add 1 tracker for each role
-    for (uint32_t role = 0; role <= static_cast<int>(Tracker_Keyboard); role++)
+    for (uint32_t role = 0; role <= static_cast<int>(Tracker_RightHand); role++)
+    {
+        if (role == TrackerHead) continue; // Skip unsupported roles
         driver_service_.get()->AddTracker(
             ITrackerType_Role_Serial.at(static_cast<ITrackerType>(role)), static_cast<ITrackerType>(role));
+    }
 
     // Log the prepended trackers
     for (auto& tracker : driver_service_.get()->TrackerVector() | std::views::values)
@@ -128,7 +141,7 @@ void ServerProvider::LeaveStandby()
 bool ServerProvider::HandleDevicePoseUpdated(uint32_t openVRID, vr::DriverPose_t& pose)
 {
     // Apply pose overrides for selected IDs
-    if (openVRID > 0 && pose_overrides_.contains(openVRID))
+    if (pose_overrides_.contains(openVRID))
     {
         pose.qRotation.w = pose_overrides_[openVRID].Orientation.W;
         pose.qRotation.x = pose_overrides_[openVRID].Orientation.X;
