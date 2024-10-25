@@ -1,5 +1,6 @@
 #include <openvr_driver.h>
 #include "BodyTracker.h"
+#include <ranges>
 
 BodyTracker::BodyTracker(const std::string& serial, const ITrackerType role) : _type(role)
 {
@@ -65,6 +66,7 @@ BodyTracker::BodyTracker(const std::string& serial, const ITrackerType role) : _
             {"/input/y/click", 0},
             {"/input/y/touch", 0},
             {"/input/trigger/touch", 0},
+            {"/input/grip/touch", 0},
             {"/input/joystick/click", 0},
             {"/input/joystick/touch", 0},
         };
@@ -85,6 +87,7 @@ BodyTracker::BodyTracker(const std::string& serial, const ITrackerType role) : _
             {"/input/b/click", 0},
             {"/input/b/touch", 0},
             {"/input/trigger/touch", 0},
+            {"/input/grip/touch", 0},
             {"/input/joystick/click", 0},
             {"/input/joystick/touch", 0},
         };
@@ -211,14 +214,28 @@ void BodyTracker::set_state(const bool state)
 
 bool BodyTracker::update_input(const std::string& path, const bool& value)
 {
+    // If the path is a well-known type of input action
+    if (_type == Tracker_LeftHand && input_paths_map_left_.contains(path))
+        return input_paths_map_left_[path].invoke(value);
+    if (_type == Tracker_RightHand && input_paths_map_right_.contains(path))
+        return input_paths_map_right_[path].invoke(value);
+
     if (!boolean_components_.contains(path) || boolean_components_[path] <= 0) return false;
-    return vr::VRDriverInput()->UpdateBooleanComponent(boolean_components_[path], value, 0) == vr::VRInputError_None;
+    return vr::VRDriverInput()->UpdateBooleanComponent(
+        boolean_components_[path], value, 0) == vr::VRInputError_None;
 }
 
 bool BodyTracker::update_input(const std::string& path, const float& value)
 {
+    // If the path is a well-known type of input action
+    if (_type == Tracker_LeftHand && input_paths_map_left_.contains(path))
+        return input_paths_map_left_[path].invoke(value);
+    if (_type == Tracker_RightHand && input_paths_map_right_.contains(path))
+        return input_paths_map_right_[path].invoke(value);
+
     if (!scalar_components_.contains(path) || scalar_components_[path] <= 0) return false;
-    return vr::VRDriverInput()->UpdateScalarComponent(scalar_components_[path], value, 0) == vr::VRInputError_None;
+    return vr::VRDriverInput()->UpdateScalarComponent(
+        scalar_components_[path], value, 0) == vr::VRInputError_None;
 }
 
 bool BodyTracker::spawn()
@@ -340,40 +357,49 @@ vr::EVRInitError BodyTracker::Activate(vr::TrackedDeviceIndex_t index)
         //vr::VRProperties()->SetStringProperty(_props, vr::Prop_ResourceRoot_String, "oculus");
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_ModelNumber_String, "Miramar (Left Controller)");
 
-        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RenderModelName_String, 
-            std::format("oculus_quest2_controller_{}", _type == Tracker_LeftHand ? "left" : "right").c_str());
-        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RegisteredDeviceType_String, 
-            std::format("culus/1WMHH000X00000_Controller_{}", _type == Tracker_LeftHand ? "Left" : "Right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RenderModelName_String,
+                                              std::format("oculus_quest2_controller_{}",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+        vr::VRProperties()->SetStringProperty(_props, vr::Prop_RegisteredDeviceType_String,
+                                              std::format("culus/1WMHH000X00000_Controller_{}",
+                                                          _type == Tracker_LeftHand ? "Left" : "Right").c_str());
 
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_ControllerType_String,
-            "oculus_touch");
+                                              "oculus_touch");
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_InputProfilePath_String,
-            "{oculus}/input/touch_profile.json");
+                                              "{oculus}/input/touch_profile.json");
 
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReady_String,
-            std::format("{{oculus}}/icons/rifts_{}_controller_ready.png",
-                _type == Tracker_LeftHand ? "left" : "right").c_str());
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready.png",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceOff_String,
-            std::format("{{oculus}}/icons/rifts_{}_controller_off.png",
-                _type == Tracker_LeftHand ? "left" : "right").c_str());
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_off.png",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearching_String,
-            std::format("{{oculus}}/icons/rifts_{}_controller_searching.gif",
-                _type == Tracker_LeftHand ? "left" : "right").c_str());
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_searching.gif",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceSearchingAlert_String,
-            std::format("{{oculus}}/icons/rifts_{}_controller_searching_alert.gif",
-                _type == Tracker_LeftHand ? "left" : "right").c_str());
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_searching_alert.gif",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceReadyAlert_String,
-            std::format("{{oculus}}/icons/rifts_{}_controller_ready_alert.png",
-                _type == Tracker_LeftHand ? "left" : "right").c_str());
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready_alert.png",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceNotReady_String,
-            std::format("{{oculus}}/icons/rifts_{}_controller_not_ready.png",
-                _type == Tracker_LeftHand ? "left" : "right").c_str());
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_not_ready.png",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceStandby_String,
-            std::format("{{oculus}}/icons/rifts_{}_controller_standby.png",
-                _type == Tracker_LeftHand ? "left" : "right").c_str());
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_standby.png",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
         vr::VRProperties()->SetStringProperty(_props, vr::Prop_NamedIconPathDeviceAlertLow_String,
-            std::format("{{oculus}}/icons/rifts_{}_controller_ready_low.png",
-                _type == Tracker_LeftHand ? "left" : "right").c_str());
+                                              std::format("{{oculus}}/icons/rifts_{}_controller_ready_low.png",
+                                                          _type == Tracker_LeftHand ? "left" : "right").c_str());
+
+        // Propagate input components to controller actions
+        for (auto& action_set : input_paths_map_left_ | std::views::values)
+            action_set.update_components(boolean_components_, scalar_components_);
+
+        for (auto& action_set : input_paths_map_right_ | std::views::values)
+            action_set.update_components(boolean_components_, scalar_components_);
     }
     else
     {

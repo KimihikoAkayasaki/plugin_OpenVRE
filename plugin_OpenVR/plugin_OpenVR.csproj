@@ -21,7 +21,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Amethyst.Plugins.Contract" Version="0.3.27-alpha" />
+		<PackageReference Include="Amethyst.Plugins.Contract" Version="0.3.32-alpha" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="System.ComponentModel.Composition" Version="8.0.0" />
 		<PackageReference Include="System.ComponentModel.Composition.Registration" Version="8.0.0" />

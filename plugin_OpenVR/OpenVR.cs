@@ -49,6 +49,15 @@ public class SteamVR : IServiceEndpoint
     private uint _vrNotificationId;
 
     private ulong _vrOverlayHandle = OpenVR.k_ulOverlayHandleInvalid;
+
+    private InputActions _controllerInputActions = new()
+    {
+        CalibrationConfirmed = (_, _) => { },
+        CalibrationModeChanged = (_, _) => { },
+        SkeletonFlipToggled = (_, _) => { },
+        TrackingFreezeToggled = (_, _) => { }
+    };
+
     public static bool Initialized { get; private set; }
     private static object InitLock { get; } = new();
 
@@ -123,44 +132,44 @@ public class SteamVR : IServiceEndpoint
         _ => $"https://docs.k2vr.tech/{Host?.DocsLanguageCode ?? "en"}/app/steamvr-driver-codes/#6"
     });
 
-    public Dictionary<TrackerType, SortedSet<KeyInputAction>> SupportedInputActions => new()
+    public Dictionary<TrackerType, SortedSet<IKeyInputAction>> SupportedInputActions => new()
     {
         {
             TrackerType.TrackerLeftHand, [
                 new KeyInputAction<bool>
                 {
                     Name = "Left Menu", Description = "Left controller's menu button",
-                    Guid = Guid.Parse("1A3ABE96-B1B3-4ABF-9969-C87BB15B2C13"), Host = Host
+                    Guid = "1A3ABE96-B1B3-4ABF-9969-C87BB15B2C13", GetHost = () => Host
                 },
                 new KeyInputAction<bool>
                 {
                     Name = "Left Trigger", Description = "Left controller's trigger button",
-                    Guid = Guid.Parse("54B78337-23B6-4E36-A9C8-047061FB9256"), Host = Host
+                    Guid = "54B78337-23B6-4E36-A9C8-047061FB9256", GetHost = () => Host
                 },
                 new KeyInputAction<bool>
                 {
                     Name = "Left Grip", Description = "Left controller's grip button",
-                    Guid = Guid.Parse("36DE93FB-01DD-4DEC-ACE6-E9ADD96027B7"), Host = Host
+                    Guid = "36DE93FB-01DD-4DEC-ACE6-E9ADD96027B7", GetHost = () => Host
                 },
                 new KeyInputAction<bool>
                 {
                     Name = "Left X", Description = "Left controller's X button",
-                    Guid = Guid.Parse("DAE6AD34-B3E4-46D0-AFEE-1CACFB1387A1"), Host = Host
+                    Guid = "DAE6AD34-B3E4-46D0-AFEE-1CACFB1387A1", GetHost = () => Host
                 },
                 new KeyInputAction<bool>
                 {
                     Name = "Left Y", Description = "Left controller's Y button",
-                    Guid = Guid.Parse("130B197B-EFC9-4A3A-9D3F-91A35BB83291"), Host = Host
+                    Guid = "130B197B-EFC9-4A3A-9D3F-91A35BB83291", GetHost = () => Host
                 },
                 new KeyInputAction<double>
                 {
                     Name = "Left Joystick X", Description = "Left controller joystick's X axis",
-                    Guid = Guid.Parse("5F519116-9A5C-48BA-9693-D9A3741AF0AB"), Host = Host
+                    Guid = "5F519116-9A5C-48BA-9693-D9A3741AF0AB", GetHost = () => Host
                 },
                 new KeyInputAction<double>
                 {
                     Name = "Left Joystick Y", Description = "Left controller joystick's Y axis",
-                    Guid = Guid.Parse("FF80F249-7F8D-4FA1-AC88-B9A1F5D623CB"), Host = Host
+                    Guid = "FF80F249-7F8D-4FA1-AC88-B9A1F5D623CB", GetHost = () => Host
                 }
             ]
         },
@@ -169,37 +178,37 @@ public class SteamVR : IServiceEndpoint
                 new KeyInputAction<bool>
                 {
                     Name = "Right Menu", Description = "Right controller's menu button",
-                    Guid = Guid.Parse("6169CB90-4997-4266-AC33-83FF3FEF16AA"), Host = Host
+                    Guid = "6169CB90-4997-4266-AC33-83FF3FEF16AA", GetHost = () => Host
                 },
                 new KeyInputAction<bool>
                 {
                     Name = "Right Trigger", Description = "Right controller's trigger button",
-                    Guid = Guid.Parse("CC84BF86-6846-4A7D-9111-7919F22D0FA7"), Host = Host
+                    Guid = "CC84BF86-6846-4A7D-9111-7919F22D0FA7", GetHost = () => Host
                 },
                 new KeyInputAction<bool>
                 {
                     Name = "Right Grip", Description = "Right controller's grip button",
-                    Guid = Guid.Parse("65EAFD83-C5D6-496F-BA3C-7FB0F9FED824"), Host = Host
+                    Guid = "65EAFD83-C5D6-496F-BA3C-7FB0F9FED824", GetHost = () => Host
                 },
                 new KeyInputAction<bool>
                 {
                     Name = "Right A", Description = "Right controller's A button",
-                    Guid = Guid.Parse("98279522-D951-4EAC-9705-71EB5A9151D0"), Host = Host
+                    Guid = "98279522-D951-4EAC-9705-71EB5A9151D0", GetHost = () => Host
                 },
                 new KeyInputAction<bool>
                 {
                     Name = "Right B", Description = "Right controller's B button",
-                    Guid = Guid.Parse("1D7238C7-3391-44BA-B40F-5F33AEE64114"), Host = Host
+                    Guid = "1D7238C7-3391-44BA-B40F-5F33AEE64114", GetHost = () => Host
                 },
                 new KeyInputAction<double>
                 {
                     Name = "Right Joystick X", Description = "Right controller joystick's X axis",
-                    Guid = Guid.Parse("46CD8C05-16F6-42D5-9265-133E57E0933B"), Host = Host
+                    Guid = "46CD8C05-16F6-42D5-9265-133E57E0933B", GetHost = () => Host
                 },
                 new KeyInputAction<double>
                 {
                     Name = "Right Joystick Y", Description = "Right controller joystick's Y axis",
-                    Guid = Guid.Parse("14E62950-A538-422E-B688-82CCB5B1E179"), Host = Host
+                    Guid = "14E62950-A538-422E-B688-82CCB5B1E179", GetHost = () => Host
                 }
             ]
         }
@@ -227,13 +236,15 @@ public class SteamVR : IServiceEndpoint
 
     public bool IsRestartOnChangesNeeded => true;
 
-    public InputActions ControllerInputActions { get; set; } = new()
+    public InputActions ControllerInputActions
     {
-        CalibrationConfirmed = (_, _) => { },
-        CalibrationModeChanged = (_, _) => { },
-        SkeletonFlipToggled = (_, _) => { },
-        TrackingFreezeToggled = (_, _) => { }
-    };
+        // ReSharper disable once AssignNullToNotNullAttribute
+        get => Host is not null && (Host.IsTrackerEnabled(TrackerType.TrackerLeftHand) ||
+                                    Host.IsTrackerEnabled(TrackerType.TrackerRightHand))
+            ? null
+            : _controllerInputActions;
+        set => _controllerInputActions = value;
+    }
 
     public bool AutoStartAmethyst
     {
@@ -522,6 +533,7 @@ public class SteamVR : IServiceEndpoint
         get
         {
             if (!Initialized || OpenVR.System is null) return (Vector3.Zero, Quaternion.Identity); // Sanity check
+            if (Host?.IsTrackerEnabled(TrackerType.TrackerHead) ?? false) return null; // Sanity check don't inbreed calibration poses
 
             // Capture RAW HMD pose
             var devicePose = new TrackedDevicePose_t[1]; // HMD only
@@ -648,15 +660,34 @@ public class SteamVR : IServiceEndpoint
         }
     }
 
-    public async Task ProcessKeyInput<T>(KeyInputAction<T> action, T data, TrackerType? receiver, CancellationToken? token = null)
+    public async Task ProcessKeyInput(IKeyInputAction action, object data, TrackerType? receiver, CancellationToken? token = null)
     {
-        Host?.Log($"Processed key input \"{action.Name}\" of type {action.DataType} with data {data} for {receiver}.");
+        if (!Initialized || OpenVR.System is null || _driverService is null || ServiceStatus != 0) return;
+        if (data is null || action.DataType != data.GetType())
+        {
+            Host?.Log($"Received invalid data {data} with type {data?.GetType()} incompatible " +
+                      $"with key input \"{action.Name}\" of type {action.DataType} for {receiver}.");
+            return; // Don't send to the driver service, it's not going to work anyway
+        }
 
-        var hasLocalAction = receiver is null
-            ? SupportedInputActions.Values.Any(x => x.Contains(action))
-            : SupportedInputActions[receiver.Value].Contains(action);
+        var trackerType = receiver ?? SupportedInputActions.FirstOrDefault(x => x.Value.Any(y => y.Equals(action))).Key;
+        Host?.Log($"Processed key input \"{action.Name}\" of type {action.DataType} with data {data} for {trackerType}.");
 
-        Host?.Log($"Furthermore, {action} {(hasLocalAction ? "is" : "is not")} present in local SupportedInputActions set.");
+        switch (data)
+        {
+            case bool boolData:
+                _driverService.UpdateInputBoolean((dTrackerType)trackerType, action.Guid, Convert.ToSByte(boolData));
+                break;
+            case float scalarData:
+                _driverService.UpdateInputScalar((dTrackerType)trackerType, action.Guid, scalarData);
+                break;
+            case double scalarData:
+                _driverService.UpdateInputScalar((dTrackerType)trackerType, action.Guid, (float)scalarData);
+                break;
+            default:
+                Host?.Log($"Data {data} with type {data.GetType()} was not processed because its type is not supported.");
+                break;
+        }
     }
 
     public async Task<(int Status, string StatusMessage, long PingTime)> TestConnection()
@@ -1325,7 +1356,16 @@ public class SteamVR : IServiceEndpoint
     private void UpdateInputBindings()
     {
         // Here, update EVR Input actions
-        if (!Initialized || OpenVR.System is null) return;
+        if (!Initialized || OpenVR.System is null || Host is null) return;
+
+        // Don't process input bindings for emulated controllers
+        if (Host.IsTrackerEnabled(TrackerType.TrackerLeftHand) ||
+            Host.IsTrackerEnabled(TrackerType.TrackerRightHand))
+        {
+            _controllerInputActions.MovePositionValues = Vector3.Zero;
+            _controllerInputActions.AdjustRotationValues = Vector2.Zero;
+            return; // Don't proceed any further
+        }
 
         // Backup the current (OLD) data
         var bFreezeState = _evrInput.TrackerFreezeActionData.bState;
@@ -1341,7 +1381,7 @@ public class SteamVR : IServiceEndpoint
         if (!_evrInput.TrackerFreezeActionData.bState && bFreezeState)
         {
             Host.Log("[Input Actions] Input: Tracking freeze toggled");
-            ControllerInputActions.TrackingFreezeToggled?.Invoke(this, EventArgs.Empty);
+            _controllerInputActions.TrackingFreezeToggled?.Invoke(this, EventArgs.Empty);
         }
 
         // Update the Flip Toggle : toggle
@@ -1349,30 +1389,30 @@ public class SteamVR : IServiceEndpoint
         if (!_evrInput.TrackerFlipToggleData.bState && bFlipToggleState)
         {
             Host.Log("[Input Actions] Input: Flip toggled");
-            ControllerInputActions.SkeletonFlipToggled?.Invoke(this, EventArgs.Empty);
+            _controllerInputActions.SkeletonFlipToggled?.Invoke(this, EventArgs.Empty);
         }
 
         // Update the Calibration:Confirm : one-time switch
         // Only one-way switch this time, reset at calibration's end
         if (_evrInput.ConfirmAndSaveActionData.bState)
-            ControllerInputActions.CalibrationConfirmed?.Invoke(this, EventArgs.Empty);
+            _controllerInputActions.CalibrationConfirmed?.Invoke(this, EventArgs.Empty);
 
         // Update the Calibration:ModeSwap : one-time switch
         // Only if the state has changed from 1 to 0: chord was done
         if (_evrInput.ModeSwapActionData.bState)
-            ControllerInputActions.CalibrationModeChanged?.Invoke(this, EventArgs.Empty);
+            _controllerInputActions.CalibrationModeChanged?.Invoke(this, EventArgs.Empty);
 
         // Update the Calibration:FineTune : held switch
         var posMultiplexer = _evrInput.FineTuneActionData.bState ? .0015f : .015f;
         var rotMultiplexer = _evrInput.FineTuneActionData.bState ? .1f : 1f;
 
         // Update the Calibration:Joystick : vector2 x2
-        ControllerInputActions.MovePositionValues =
+        _controllerInputActions.MovePositionValues =
             new Vector3(_evrInput.LeftJoystickActionData.x * posMultiplexer,
                 _evrInput.RightJoystickActionData.y * posMultiplexer,
                 -_evrInput.LeftJoystickActionData.y * posMultiplexer);
 
-        ControllerInputActions.AdjustRotationValues =
+        _controllerInputActions.AdjustRotationValues =
             new Vector2(_evrInput.RightJoystickActionData.y * MathF.PI / 280f * rotMultiplexer,
                 -_evrInput.LeftJoystickActionData.x * MathF.PI / 280f * rotMultiplexer);
     }
@@ -1430,8 +1470,8 @@ public class SteamVR : IServiceEndpoint
                 header = header.Replace("{0}",
                     Host.RequestLocalizedString("/GeneralPage/Tips/TrackingFreeze/Buttons/Oculus"));
 
-            ControllerInputActions.TrackingFreezeActionTitleString = header;
-            ControllerInputActions.TrackingFreezeActionContentString =
+            _controllerInputActions.TrackingFreezeActionTitleString = header;
+            _controllerInputActions.TrackingFreezeActionContentString =
                 Host.RequestLocalizedString("/GeneralPage/Tips/TrackingFreeze/Footer");
         }
 
@@ -1466,8 +1506,8 @@ public class SteamVR : IServiceEndpoint
                 header = header.Replace("{0}",
                     Host.RequestLocalizedString("/SettingsPage/Tips/FlipToggle/Buttons/Oculus"));
 
-            ControllerInputActions.SkeletonFlipActionTitleString = header;
-            ControllerInputActions.SkeletonFlipActionContentString =
+            _controllerInputActions.SkeletonFlipActionTitleString = header;
+            _controllerInputActions.SkeletonFlipActionContentString =
                 Host.RequestLocalizedString("/SettingsPage/Tips/FlipToggle/Footer");
         }
     }

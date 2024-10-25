@@ -1,3 +1,4 @@
+// ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
 #pragma once
 #include <filesystem>
 #include <map>
@@ -84,6 +85,107 @@ const std::map<ITrackerType, const char*>
         {Tracker_LeftHand, "AME-LHAND"},
         {Tracker_RightHand, "AME-RHAND"}
     };
+
+enum InputActionHandlingMode : std::uint8_t
+{
+    ModeInvalid,
+    ModeScalar, // Move true=1.0, false=0.0
+    ModeBoolean, // Move to bool as >=0.5f
+    ModeHasValue // True if .first is not 0
+};
+
+struct DataInputAction
+{
+    std::string path;
+    InputActionHandlingMode mode = ModeInvalid;
+};
+
+class InputActionSet
+{
+public:
+    InputActionSet() = default;
+
+    explicit InputActionSet(const std::initializer_list<DataInputAction>& m_actions) : actions(m_actions)
+    {
+    }
+
+    std::vector<DataInputAction> actions;
+    std::map<std::string, vr::VRInputComponentHandle_t> boolean_components;
+    std::map<std::string, vr::VRInputComponentHandle_t> scalar_components;
+
+    void update_components(
+        const std::map<std::string, vr::VRInputComponentHandle_t>& m_boolean_components,
+        const std::map<std::string, vr::VRInputComponentHandle_t>& m_scalar_components)
+    {
+        boolean_components = m_boolean_components;
+        scalar_components = m_scalar_components;
+    }
+
+    bool invoke(const bool& value)
+    {
+        if (actions.empty()) return false;
+        auto result_value = false;
+
+        for (const auto& [path, mode] : actions)
+        {
+            switch (mode)
+            {
+            case ModeBoolean:
+                result_value &= update_boolean(path, value);
+                break;
+            case ModeScalar:
+                result_value &= update_scalar(path, value ? 1.0f : 0.0f);
+                break;
+            case ModeHasValue:
+                result_value &= update_boolean(path, value);
+                break;
+            default: break;
+            }
+        }
+
+        return result_value;
+    }
+
+    bool invoke(const float& value)
+    {
+        if (actions.empty()) return false;
+        auto result_value = false;
+
+        for (const auto& [path, mode] : actions)
+        {
+            switch (mode)
+            {
+            case ModeBoolean:
+                result_value &= update_boolean(path, value >= 0.5f);
+                break;
+            case ModeScalar:
+                result_value &= update_scalar(path, value);
+                break;
+            case ModeHasValue:
+                result_value &= update_boolean(path, value > 0.0f);
+                break;
+            default: break;
+            }
+        }
+
+        return result_value;
+    }
+
+private:
+    bool update_boolean(const std::string& path, const bool& value)
+    {
+        if (path.empty() || !boolean_components.contains(path)) return false;
+        return vr::VRDriverInput()->UpdateBooleanComponent(
+            boolean_components[path], value, 0) == vr::VRInputError_None;
+    }
+
+    bool update_scalar(const std::string& path, const float& value)
+    {
+        if (path.empty() || !scalar_components.contains(path)) return false;
+        return vr::VRDriverInput()->UpdateScalarComponent(
+            scalar_components[path], value, 0) == vr::VRInputError_None;
+    }
+};
 
 class BodyTracker : public vr::ITrackedDeviceServerDriver
 {
@@ -205,4 +307,164 @@ private:
 
     std::map<std::string, vr::VRInputComponentHandle_t> boolean_components_;
     std::map<std::string, vr::VRInputComponentHandle_t> scalar_components_;
+
+    std::map<std::string, InputActionSet> input_paths_map_left_{
+        {
+            "1A3ABE96-B1B3-4ABF-9969-C87BB15B2C13", InputActionSet{
+                DataInputAction{
+                    .path = "/input/system/click",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "54B78337-23B6-4E36-A9C8-047061FB9256", InputActionSet{
+                DataInputAction{
+                    .path = "/input/trigger/value",
+                    .mode = ModeScalar
+                },
+                DataInputAction{
+                    .path = "/input/trigger/touch",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "36DE93FB-01DD-4DEC-ACE6-E9ADD96027B7", InputActionSet{
+                DataInputAction{
+                    .path = "/input/grip/value",
+                    .mode = ModeScalar
+                },
+                DataInputAction{
+                    .path = "/input/grip/touch",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "DAE6AD34-B3E4-46D0-AFEE-1CACFB1387A1", InputActionSet{
+                DataInputAction{
+                    .path = "/input/x/click",
+                    .mode = ModeBoolean
+                },
+                DataInputAction{
+                    .path = "/input/x/touch",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "130B197B-EFC9-4A3A-9D3F-91A35BB83291", InputActionSet{
+                DataInputAction{
+                    .path = "/input/y/click",
+                    .mode = ModeBoolean
+                },
+                DataInputAction{
+                    .path = "/input/y/touch",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "5F519116-9A5C-48BA-9693-D9A3741AF0AB", InputActionSet{
+                DataInputAction{
+                    .path = "/input/joystick/x",
+                    .mode = ModeBoolean
+                },
+                DataInputAction{
+                    .path = "/input/joystick/touch",
+                    .mode = ModeHasValue
+                }
+            }
+        },
+        {
+            "FF80F249-7F8D-4FA1-AC88-B9A1F5D623CB", InputActionSet{
+                DataInputAction{
+                    .path = "/input/joystick/y",
+                    .mode = ModeBoolean
+                },
+                DataInputAction{
+                    .path = "/input/joystick/touch",
+                    .mode = ModeHasValue
+                }
+            }
+        },
+    };
+
+    std::map<std::string, InputActionSet> input_paths_map_right_{
+        {
+            "6169CB90-4997-4266-AC33-83FF3FEF16AA", InputActionSet{
+                DataInputAction{
+                    .path = "/input/system/click",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "CC84BF86-6846-4A7D-9111-7919F22D0FA7", InputActionSet{
+                DataInputAction{
+                    .path = "/input/trigger/value",
+                    .mode = ModeScalar
+                },
+                DataInputAction{
+                    .path = "/input/trigger/touch",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "65EAFD83-C5D6-496F-BA3C-7FB0F9FED824", InputActionSet{
+                DataInputAction{
+                    .path = "/input/grip/value",
+                    .mode = ModeScalar
+                },
+                DataInputAction{
+                    .path = "/input/grip/touch",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "98279522-D951-4EAC-9705-71EB5A9151D0", InputActionSet{
+                DataInputAction{
+                    .path = "/input/a/click",
+                    .mode = ModeBoolean
+                },
+                DataInputAction{
+                    .path = "/input/a/touch",
+                    .mode = ModeBoolean
+                }
+            }
+        },
+        {
+            "1D7238C7-3391-44BA-B40F-5F33AEE64114", InputActionSet{
+                DataInputAction{.path = "/input/b/click"},
+                DataInputAction{.path = "/input/b/touch"}
+            }
+        },
+        {
+            "46CD8C05-16F6-42D5-9265-133E57E0933B", InputActionSet{
+                DataInputAction{
+                    .path = "/input/joystick/x",
+                    .mode = ModeBoolean
+                },
+                DataInputAction{
+                    .path = "/input/joystick/touch",
+                    .mode = ModeHasValue
+                }
+            }
+        },
+        {
+            "14E62950-A538-422E-B688-82CCB5B1E179", InputActionSet{
+                DataInputAction{
+                    .path = "/input/joystick/y",
+                    .mode = ModeBoolean
+                },
+                DataInputAction{
+                    .path = "/input/joystick/touch",
+                    .mode = ModeHasValue
+                }
+            }
+        },
+    };
 };
