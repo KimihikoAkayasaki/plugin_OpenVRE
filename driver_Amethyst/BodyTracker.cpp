@@ -114,7 +114,17 @@ void BodyTracker::update()
         _pose.poseIsValid = _valid;
         _pose.deviceIsConnected = _active;
 
-        vr::VRServerDriverHost()->TrackedDevicePoseUpdated(_index, _pose, sizeof _pose);
+        auto pose = _pose; // Copy the pose
+
+        // Adjust for kinect-based HMD pose emulation
+        if (m_is_head_override_active)
+        {
+            pose.vecPosition[0] += 1.0;
+            pose.vecPosition[1] += 1.0;
+            pose.vecPosition[2] += 1.0;
+        }
+
+        vr::VRServerDriverHost()->TrackedDevicePoseUpdated(_index, pose, sizeof pose);
     }
 }
 

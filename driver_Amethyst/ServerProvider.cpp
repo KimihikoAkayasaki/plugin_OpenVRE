@@ -163,6 +163,7 @@ void ServerProvider::SetPoseOverride(uint32_t id, bool isEnabled)
 {
     if (isEnabled) pose_overrides_[id] = dDriverPose();
     else pose_overrides_.erase(id);
+    if (id == 0) m_is_head_override_active = isEnabled;
 }
 
 void ServerProvider::UpdateDriverPose(uint32_t id, dDriverPose pose)

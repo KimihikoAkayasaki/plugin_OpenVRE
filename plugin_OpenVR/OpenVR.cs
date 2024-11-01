@@ -671,7 +671,8 @@ public class SteamVR : IServiceEndpoint
         }
 
         var trackerType = receiver ?? SupportedInputActions.FirstOrDefault(x => x.Value.Any(y => y.Equals(action))).Key;
-        Host?.Log($"Processed key input \"{action.Name}\" of type {action.DataType} with data {data} for {trackerType}.");
+        if (data is not false && data is not 0.0f && data is not 0.0) // Log only for actual data input and not defaults
+            Host?.Log($"Processed key input \"{action.Name}\" of type {action.DataType} with data {data} for {trackerType}.");
 
         switch (data)
         {

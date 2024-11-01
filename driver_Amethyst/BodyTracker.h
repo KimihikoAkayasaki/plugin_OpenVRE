@@ -10,6 +10,9 @@
 	std::chrono::time_point_cast<std::chrono::microseconds>	\
 	(std::chrono::system_clock::now()).time_since_epoch().count()
 
+// Is HMD pose override enabled atm
+inline bool m_is_head_override_active = false;
+
 enum ITrackerType : int
 {
     Tracker_Handed = 0,
