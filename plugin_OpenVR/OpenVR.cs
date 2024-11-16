@@ -38,7 +38,7 @@ namespace plugin_OpenVR;
 [ExportMetadata("Name", "SteamVR (Emulation Support)")]
 [ExportMetadata("Guid", "K2VRTEAM-AME2-APII-SNDP-SENDPTOVREMU")]
 [ExportMetadata("Publisher", "公彦赤屋先")]
-[ExportMetadata("Version", "1.0.0.0")]
+[ExportMetadata("Version", "1.0.2.0")]
 [ExportMetadata("Website", "https://github.com/KimihikoAkayasaki/plugin_OpenVRE")]
 [ExportMetadata("DependencyInstaller", typeof(DriverInstaller))]
 [ExportMetadata("CoreSetupData", typeof(SetupData))]

@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0.0",
+  "version": "1.0.2.0",
   "display_name": "SteamVR (Emulation Support)",
-  "download": "plugin_OpenVR.zip",
+  "download_": "plugin_OpenVR.zip",
   "changelog": "Better path handling for SteamVR",
   "guid": "K2VRTEAM-AME2-APII-SNDP-SENDPTOVREMU"
 }
